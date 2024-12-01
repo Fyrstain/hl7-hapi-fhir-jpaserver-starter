@@ -1,0 +1,20 @@
+hapi:
+  fhir:
+    supported_resource_types:
+      - ActivityDefinition
+      - CodeSystem
+      - Library
+      - Measure
+      - OperationDefinition
+      - PlanDefinition
+      - Questionnaire
+      - QuestionnaireResponse
+      - SearchParameter
+      - StructureDefinition
+      - Subscription
+      - ValueSet
+
+    ### This flag when enabled to true, will avail evaluate measure operations from CR Module.
+    ### Flag is false by default, can be passed as command line argument to override.
+    cr:
+      enabled: true

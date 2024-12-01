@@ -134,6 +134,83 @@ spring:
       hibernate.search.enabled: false
 ```
 
+
+### Configuration using additional external profiles yaml file and using Docker
+
+You can also add configuration files in addition to the existing file provided in the compiled set of resources.
+This allows you to only define the specific configuration you need to change from the base HAPI profile.
+
+Some example profiles are available in the **profiles** folder at the root of this project. The following command will
+bind the folder as a volume in the container and adds the environment variable to tell spring where to find additional
+config files.
+
+```
+docker run -p 8090:8080 -v ./profiles:/profiles -e "--spring.config.additional.location=/profiles" hapiproject/hapi:latest
+```
+
+This command will only check for the default configuration file **application.yaml**. If you want to use a specific profile
+from this folder, use additional spring environment variable as follows :
+
+```
+docker run -p 8090:8080 -v ./profiles:/profiles -e "--spring.config.additional.location=/profiles" -e "--spring.profiles.active=qe" hapiproject/hapi:latest
+```
+
+This way spring will look for the configuration for the profile you defined (here it will search for **application-qe.yaml**).
+
+You can also use several profiles using coma-separated list of profiles in the variable value :
+
+```
+--e "--spring.profiles.active=qe,other"
+```
+
+If you want to use this with docker-compose, here is an example file using a single external profile and a postgres container for database : 
+
+```yaml
+version: "3.8"
+services:
+  hapi-fhir-jpaserver-start:
+    build: .
+    container_name: hapi-fhir-jpaserver-start
+    restart: on-failure
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://hapi-fhir-postgres:5432/hapi"
+      SPRING_DATASOURCE_USERNAME: "admin"
+      SPRING_DATASOURCE_PASSWORD: "admin"
+      SPRING_DATASOURCE_DRIVERCLASSNAME: "org.postgresql.Driver"
+      SPRING_CONFIG_ADDITIONAL_LOCATION: "/profiles/"
+      SPRING_PROFILES_ACTIVE: "qe"
+    volumes:
+      - ./profiles:/profiles
+    ports:
+      - "8080:8080"
+  hapi-fhir-postgres:
+    image: postgres:15-alpine
+    container_name: hapi-fhir-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: "hapi"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+    volumes:
+      - hapi-fhir-postgres:/var/lib/postgresql/data
+volumes:
+  hapi-fhir-postgres:
+```
+
+You can retrieve the environment variables : 
+
+```
+SPRING_CONFIG_ADDITIONAL_LOCATION: "/profiles/"
+SPRING_PROFILES_ACTIVE: "qe"
+```
+
+as well as the volume : 
+
+```
+volumes:
+  - ./profiles:/profiles
+```
+
 ### Example running custom interceptor using docker-compose
 
 This example is an extension of the above one, now adding a custom interceptor.
