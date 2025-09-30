@@ -204,7 +204,7 @@ public class Mapper {
 				.findFirst().orElse("Resource");
 
 			result.addParameter(new Parameters.ParametersParameterComponent()
-				.setName(v.getName()).setResource(new Binary()
+				.setName("return").setResource(new Binary()
 					.setContentType(getContentType(type))
 					.setContentAsBase64(Base64.getEncoder()
 						.encodeToString(
