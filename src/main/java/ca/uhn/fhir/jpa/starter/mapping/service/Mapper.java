@@ -807,7 +807,7 @@ public class Mapper {
 	 * @return A list of Base items resulting from the processing, or null if the processing is skipped.
 	 * @throws InvalidRequestException If there's an issue with the mapping rules or the structure of the HL7v2 data.
 	 */
-	private List<Object> processHL7v2Object(MappingContext context, Object hl7v2Object) {
+	List<Object> processHL7v2Object(MappingContext context, Object hl7v2Object) {
 		List<Object> items = new ArrayList<>();
 		boolean skip = false;
 
