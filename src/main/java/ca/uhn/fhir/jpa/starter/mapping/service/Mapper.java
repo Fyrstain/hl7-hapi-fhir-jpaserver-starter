@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -1167,25 +1168,25 @@ public class Mapper {
 					try {
 						LocalDateTime ldt = LocalDateTime.parse(dateSource, inputFormatter);
 						if (forceInstant) {
-							return new InstantType(Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant()));
+							return new InstantType(Date.from(ldt.atZone(ZoneOffset.UTC).toInstant()));
 						}
 						if (outputFormatter != null) {
-							String formatted = ldt.format(outputFormatter);
+							String formatted = ldt.atZone(ZoneOffset.UTC).format(outputFormatter);
 							return new DateTimeType(formatted);
 						}
-						return new DateTimeType(Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant()));
+						return new DateTimeType(Date.from(ldt.atZone(ZoneOffset.UTC).toInstant()));
 
 					} catch (Exception e1) {
 						try {
 							LocalDate ld = LocalDate.parse(dateSource, inputFormatter);
 							if (forceInstant) {
-								return new InstantType(Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+								return new InstantType(Date.from(ld.atStartOfDay(ZoneOffset.UTC).toInstant()));
 							}
 							if (outputFormatter != null) {
-								String formatted = ld.format(outputFormatter);
+								String formatted = ld.atStartOfDay(ZoneOffset.UTC).format(outputFormatter);
 								return new DateTimeType(formatted);
 							}
-							return new DateType(Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+							return new DateType(Date.from(ld.atStartOfDay(ZoneOffset.UTC).toInstant()));
 
 						} catch (Exception e2) {
 							throw new IllegalArgumentException(
