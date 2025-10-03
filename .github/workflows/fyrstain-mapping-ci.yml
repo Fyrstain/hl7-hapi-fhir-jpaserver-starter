@@ -106,7 +106,7 @@ jobs:
           
           curl -s -X PUT "$TESTBED_URL/Device/ci-mapping-engine" \
             -H "Content-Type: application/fhir+json" \
-            -d '{"resourceType": "Device","id": "ci-mapping-engine","displayName": "CI Mapping Engine","status": "active","name": [{"value": "CI Mapping Engine","type": "patient-reported-name","display": true}],"type": [{"coding": [{"system": "http://fyrstain.com/pdt/ValueSet/systemTypes","code": "sut","display": "SUT"}]}],"version": [{"type": {"coding": [{"system": "urn:iso:std:iso:11073:10101","code": "531975","display": "Software revision"}]},"value": "${{ needs.build.outputs.docker_tag }}"},{"type": {"coding": [{"system": "http://fyrstain.com/pdt/CodeSystem/PandoraStandards","code": "fhir","display": "FHIR"}]},"value": "R5"}],"endpoint": [{"reference": "Endpoint/ci-mapping-engine-endpoint"}]}'
+            -d '{"resourceType": "Device","id": "ci-mapping-engine","displayName": "CI Mapping Engine","status": "active","name": [{"value": "CI Mapping Engine","type": "patient-reported-name","display": true}],"type": [{"coding": [{"system": "http://fyrstain.com/pdt/ValueSet/systemTypes","code": "sut","display": "SUT"}]}],"version": [{"type": {"coding": [{"system": "urn:iso:std:iso:11073:10101","code": "531975","display": "Software revision"}]},"value": "${{ needs.build.outputs.docker_tag }}"},{"type": {"coding": [{"system": "http://fyrstain.com/pdt/CodeSystem/PandoraStandards","code": "fhir","display": "FHIR"}]},"value": "R4"}],"endpoint": [{"reference": "Endpoint/ci-mapping-engine-endpoint"}]}'
 
   integration-tests:
     needs: deploy
