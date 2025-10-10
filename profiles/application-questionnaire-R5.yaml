@@ -1,0 +1,15 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+hapi:
+  fhir:
+    cr:
+      enabled: true
+    fhir_version: R5
+    custom_provider_classes:
+      - ca.uhn.fhir.jpa.starter.questionnaire.provider.R5.ExtractProvider
+      - ca.uhn.fhir.jpa.starter.questionnaire.provider.R5.PopulateProvider
+
+remote:
+  url: https://demonstrator.ovh.fyrstain.com/orchestrator
