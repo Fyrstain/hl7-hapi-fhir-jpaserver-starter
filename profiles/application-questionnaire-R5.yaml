@@ -5,7 +5,7 @@ spring:
 hapi:
   fhir:
     cr:
-      enabled: true
+      enabled: false
     fhir_version: R5
     custom_provider_classes:
       - ca.uhn.fhir.jpa.starter.questionnaire.provider.R5.ExtractProvider

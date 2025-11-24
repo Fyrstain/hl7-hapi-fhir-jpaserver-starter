@@ -14,9 +14,11 @@ import org.opencds.cqf.fhir.utility.repository.RestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 @Component
+@Primary
 @Conditional(OnR4Condition.class)
 public class ExtractProvider {
 
