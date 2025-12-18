@@ -161,6 +161,7 @@ public class Mapper {
 			case "CSV": return new CSVRecords(parseCSVData(parameter.getContentAsBase64()));
 			case "JSON": return parseJsonData(parameter.getContentAsBase64());
 			case "HL7v2": return HL7v2DataReader.parseData(parameter.getContentAsBase64());
+			case "HPRIM": return HPRIMDataReader.parseData(parameter.getContentAsBase64());
 			case "XML": return parseXMLData(parameter.getContentAsBase64());
 			default:
 				String stringContent = new String(Base64.getDecoder().decode(parameter.getContentAsBase64()), StandardCharsets.UTF_8);
@@ -173,6 +174,7 @@ public class Mapper {
 		switch (type) {
 			case "CSV": return new CSVBuilder();
 			case "JSON": return new JSONBuilder();
+			case "HL7v2": return new HL7v2Builder();
 			default: return ResourceFactory.createResourceOrType(type);
 		}
 	}
@@ -198,6 +200,8 @@ public class Mapper {
 			case "XML":
 				return XML_MIME_TYPE;
 			case "HL7v2":
+				return HL7v2_MIME_TYPE;
+			case "HPRIM":
 				return HL7v2_MIME_TYPE;
 			default:
 				return "application/fhir+json";
@@ -330,6 +334,8 @@ public class Mapper {
 				return processCSVSource(context, localVariables);
 			case "HL7v2":
 				return processHL7v2Source(context, localVariables);
+			case "HPRIM":
+				return processHPRIMSource(context, localVariables);
 			case "XML":
 				//Uses JSON processing as XML are translated to JSON
 			case "JSON":
@@ -534,6 +540,65 @@ public class Mapper {
 				result.add(variables);
 			}
 		}
+		return result;
+	}
+
+	/**
+	 * Process HPRIM sources for a specific context.
+	 *
+	 * @param context        the Mapping context.
+	 * @param localVariables local variables
+	 * @return a list of variables for all matched sources
+	 */
+	private List<Variables> processHPRIMSource(MappingContext context, Variables localVariables) {
+		// TODO Handle multiple sources?
+		if (context.getRule().getSource().size() > 1) {
+			throw new InvalidRequestException(String.format(
+				"Rule \"%s\": multiple sources are not handled yet",
+				context.getRule().getName()
+			));
+		}
+
+		StructureMap.StructureMapGroupRuleSourceComponent source = context.getRule().getSource().get(0);
+
+		Object sourceObject = localVariables.get(INPUT, context.getSources().get(0).getContext());
+
+		if (sourceObject == null) {
+			throw new InvalidRequestException(
+				String.format("Unknown input variable %s in %s for rule %s",
+					context.getSources().get(0).getContext(),
+					context.getStructureMap().getUrl(),
+					context.getRule().getName()));
+		} else if (!source.hasElement()) {
+			throw new InvalidRequestException(
+				String.format("Element should not be null in %s for rule %s !",
+					context.getStructureMap().getUrl(),
+					context.getRule().getName()));
+		} else if (!source.hasType()) {
+			throw new InvalidRequestException(
+				String.format("Type should not be null in %s for rule %s !",
+					context.getStructureMap().getUrl(),
+					context.getRule().getName()));
+		}
+
+		List<Base> items;
+
+		// Only HPRIMMessage or HPRIMSegment
+		if (sourceObject instanceof HPRIMMessage || sourceObject instanceof HPRIMSegment) {
+			items = processHPRIMObject(context, sourceObject);
+		} else {
+			items = new ArrayList<>();
+		}
+
+		List<Variables> result = new ArrayList<>();
+		if (source.hasVariable()) {
+			for (Object base : items) {
+				Variables variables = localVariables.copy();
+				variables.add(INPUT, source.getVariable(), base);
+				result.add(variables);
+			}
+		}
+
 		return result;
 	}
 
@@ -970,6 +1035,104 @@ public class Mapper {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Processes a HPRIM object according to the mapping context.
+	 *
+	 * @param context    the Mapping context
+	 * @param hprimObject the HPRIMMessage or HPRIMSegment
+	 * @return a list of Base items resulting from the processing
+	 */
+	List<Base> processHPRIMObject(MappingContext context, Object hprimObject) {
+		List<Base> items = new ArrayList<>();
+		boolean skip = false;
+
+		for (var source : context.getSources()) {
+			Base item = null;
+			String pathString = source.getElement();
+
+			try {
+				HPRIMPath path = new HPRIMPath(pathString);
+
+				List<HPRIMSegment> segments = new ArrayList<>();
+				if (hprimObject instanceof HPRIMMessage msg) {
+					segments.addAll(msg.getSegments(path.getSegment()));
+				} else if (hprimObject instanceof HPRIMSegment seg) {
+					if (seg.getName().equals(path.getSegment())) {
+						segments.add(seg);
+					}
+				}
+
+				if (segments.size() <= (path.getSegmentIndex() != null ? path.getSegmentIndex() : 0)) {
+					logger.info("Segment index {} out of bounds for {}", path.getSegmentIndex(), path.getSegment());
+					continue;
+				}
+
+				HPRIMSegment segment = segments.get(path.getSegmentIndex() != null ? path.getSegmentIndex() : 0);
+
+				if (path.getField() == null) {
+					StringBuilder sb = new StringBuilder();
+					for (String[] fieldArr : segment.getFields()) {
+						if (sb.length() > 0) sb.append("|");
+						sb.append(String.join("^", fieldArr));
+					}
+					item = getFHIRItem(sb.toString(), source.getType());
+				} else {
+					// Field
+					if (segment.getFields().size() <= path.getField()) {
+						logger.info("Field {} not found in segment {}", path.getField() + 1, path.getSegment());
+						continue;
+					}
+
+					String[] field = segment.getFields().get(path.getField());
+					if (field.length <= (path.getFieldRepetition() != null ? path.getFieldRepetition() : 0)) {
+						logger.info("Repetition {} not found in field {} of segment {}", path.getFieldRepetition(), path.getField() + 1, path.getSegment());
+						continue;
+					}
+
+					String value = field[path.getFieldRepetition() != null ? path.getFieldRepetition() : 0];
+
+					// Component
+					if (path.getComponent() != null) {
+						String[] components = value.split("\\^", -1);
+						if (components.length <= path.getComponent()) {
+							logger.info("Component {} not found in field {} of segment {}", path.getComponent() + 1, path.getField() + 1, path.getSegment());
+							continue;
+						}
+						value = components[path.getComponent()];
+
+						// Sub-component
+						if (path.getSubComponent() != null) {
+							String[] subComponents = value.split("&", -1);
+							if (subComponents.length <= path.getSubComponent()) {
+								logger.info("Subcomponent {} not found in component {} of field {} segment {}", path.getSubComponent() + 1, path.getComponent() + 1, path.getField() + 1, path.getSegment());
+								continue;
+							}
+							value = subComponents[path.getSubComponent()];
+						}
+					}
+
+					item = getFHIRItem(value, source.getType());
+				}
+
+				if (item != null) {
+					checkValues(source, List.of(item), context.getRule().getName());
+					if (!matchesCondition(source, item, context.getVariables())) {
+						skip = true;
+						break;
+					}
+					items.add(item);
+				} else if (source.hasDefaultValue()) {
+					item = source.getDefaultValue();
+					items.add(item);
+				}
+
+			} catch (Exception e) {
+				logger.info("Failed to process HPRIM path: " + pathString, e);
+			}
+		}
+		return skip ? new ArrayList<>() : items;
 	}
 
 	/**
