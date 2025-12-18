@@ -387,6 +387,7 @@ public class Mapper {
 
 		items = csvRecords.getRecords().stream()
 			.map(record -> processCSVRecord(context, record))
+			.filter(record-> record != null)
 			.collect(Collectors.toList());
 
 		List<Variables> result = new ArrayList<>();
@@ -848,6 +849,10 @@ public class Mapper {
 		}
 		return skip ? new ArrayList<>() : items;
 	}
+	private String normalizeSegmentName(String name) {
+		return name.replaceAll("\\d+$", "");
+	}
+
 
 	/**
 	 * Converts an object (GenericSegment or typed Segment) to GenericSegment
@@ -890,31 +895,38 @@ public class Mapper {
 		}
 
 		for (Group group : currentGroups) {
-			try {
-				Structure[] segs = group.getAll(path.getSegment());
-				if (path.getSegmentRepetition() == null) {
-					for (Structure seg : segs) {
-						result.add(toGenericSegment(seg));
-					}
-				} else {
-					int rep = path.getSegmentRepetition();
-					if (rep < segs.length) {
-						result.add(toGenericSegment(segs[rep]));
-					}
+			for (String name : group.getNames()) {
+				if (!normalizeSegmentName(name)
+					.equalsIgnoreCase(normalizeSegmentName(path.getSegment()))) {
+					continue;
 				}
-			} catch (HL7Exception ignored) {
+
+				try {
+					Structure[] segs = group.getAll(name);
+					for (int i = 0; i < segs.length; i++) {
+						if (path.getSegmentRepetition() == null || i == path.getSegmentRepetition()) {
+							result.add(toGenericSegment(segs[i]));
+						}
+					}
+				} catch (HL7Exception ignored) {}
 			}
 		}
 
 		if (result.isEmpty()) {
-			try {
-				Structure[] rootSegs = msg.getAll(path.getSegment());
-				for (int i = 0; i < rootSegs.length; i++) {
-					if (path.getSegmentRepetition() == null || i == path.getSegmentRepetition()) {
-						result.add(toGenericSegment(rootSegs[i]));
-					}
+			for (String name : msg.getNames()) {
+				if (!normalizeSegmentName(name)
+					.equalsIgnoreCase(normalizeSegmentName(path.getSegment()))) {
+					continue;
 				}
-			} catch (HL7Exception ignored) {}
+				try {
+					Structure[] segs = msg.getAll(name);
+					for (int i = 0; i < segs.length; i++) {
+						if (path.getSegmentRepetition() == null || i == path.getSegmentRepetition()) {
+							result.add(toGenericSegment(segs[i]));
+						}
+					}
+				} catch (HL7Exception ignored) {}
+			}
 		}
 
 		if (result.isEmpty()) {
@@ -948,7 +960,8 @@ public class Mapper {
 					if (structure instanceof Group) {
 						result.addAll(scanGroupsRecursively((Group) structure, path));
 					} else if (structure instanceof Segment) {
-						if (name.equalsIgnoreCase(path.getSegment())) {
+						if (normalizeSegmentName(name)
+							.equalsIgnoreCase(normalizeSegmentName(path.getSegment()))) {
 							result.add(toGenericSegment(structure));
 						}
 					}
