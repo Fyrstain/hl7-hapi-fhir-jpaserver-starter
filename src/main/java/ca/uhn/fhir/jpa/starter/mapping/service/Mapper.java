@@ -581,7 +581,7 @@ public class Mapper {
 					context.getRule().getName()));
 		}
 
-		List<Base> items;
+		List<Object> items;
 
 		// Only HPRIMMessage or HPRIMSegment
 		if (sourceObject instanceof HPRIMMessage || sourceObject instanceof HPRIMSegment) {
@@ -1044,8 +1044,8 @@ public class Mapper {
 	 * @param hprimObject the HPRIMMessage or HPRIMSegment
 	 * @return a list of Base items resulting from the processing
 	 */
-	List<Base> processHPRIMObject(MappingContext context, Object hprimObject) {
-		List<Base> items = new ArrayList<>();
+	List<Object> processHPRIMObject(MappingContext context, Object hprimObject) {
+		List<Object> items = new ArrayList<>();
 		boolean skip = false;
 
 		for (var source : context.getSources()) {
@@ -1054,7 +1054,6 @@ public class Mapper {
 
 			try {
 				HPRIMPath path = new HPRIMPath(pathString);
-
 				List<HPRIMSegment> segments = new ArrayList<>();
 				if (hprimObject instanceof HPRIMMessage msg) {
 					segments.addAll(msg.getSegments(path.getSegment()));
@@ -1072,12 +1071,9 @@ public class Mapper {
 				HPRIMSegment segment = segments.get(path.getSegmentIndex() != null ? path.getSegmentIndex() : 0);
 
 				if (path.getField() == null) {
-					StringBuilder sb = new StringBuilder();
-					for (String[] fieldArr : segment.getFields()) {
-						if (sb.length() > 0) sb.append("|");
-						sb.append(String.join("^", fieldArr));
+					for (HPRIMSegment seg : segments) {
+						items.add(seg);
 					}
-					item = getFHIRItem(sb.toString(), source.getType());
 				} else {
 					// Field
 					if (segment.getFields().size() <= path.getField()) {
@@ -1091,10 +1087,16 @@ public class Mapper {
 						continue;
 					}
 
-					String value = field[path.getFieldRepetition() != null ? path.getFieldRepetition() : 0];
+					String value;
+
+					if (!path.hasExplicitComponent()) {
+						value = String.join("^", field);
+					} else {
+						value = field[path.getFieldRepetition() != null ? path.getFieldRepetition() : 0];
+					}
 
 					// Component
-					if (path.getComponent() != null) {
+					if (path.hasExplicitComponent()) {
 						String[] components = value.split("\\^", -1);
 						if (components.length <= path.getComponent()) {
 							logger.info("Component {} not found in field {} of segment {}", path.getComponent() + 1, path.getField() + 1, path.getSegment());
@@ -1292,6 +1294,38 @@ public class Mapper {
 			if (result != null) {
 				((JSONBuilder) targetedElement).putByPath(element, result.castToString(result).getValue());
 			}
+		} else if (targetedElement instanceof HL7v2Builder hl7) {
+			String element = context.getTarget().getElement();
+
+			Object source = context.getVariables()
+				.get(INPUT, context.getRule().getSource().get(0).getVariable());
+
+			if (!element.contains("-")) {
+
+				if (source instanceof HPRIMSegment seg) {
+					hl7.addSegment(seg.getName(), seg.getFields());
+					return;
+				}
+
+				if (source instanceof List<?> list) {
+					for (Object obj : list) {
+						if (obj instanceof HPRIMSegment seg) {
+							hl7.addSegment(seg.getName(), seg.getFields());
+						}
+					}
+					return;
+				}
+				return;
+			}
+
+			if (context.getTarget().hasTransform()) {
+				result = runTransform(context, null, atRoot);
+			}
+
+			hl7.putByPath(
+				element,
+				result != null ? result.castToString(result).getValue() : ""
+			);
 		}
 
 		// If the target defines a variable, put the result in it.

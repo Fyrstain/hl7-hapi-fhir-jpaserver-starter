@@ -17,6 +17,7 @@ public class HPRIMPath {
 	private final Integer fieldRepetition;
 	private final Integer component;
 	private final Integer subComponent;
+	private final boolean hasExplicitComponent;
 
 	public HPRIMPath(String path) {
 		Matcher matcher = PATH_PATTERN.matcher(path);
@@ -30,6 +31,7 @@ public class HPRIMPath {
 		this.fieldRepetition = matcher.group(4) != null ? Integer.parseInt(matcher.group(4)) : 0;
 		this.component = matcher.group(5) != null ? Integer.parseInt(matcher.group(5)) - 1 : null; // components 1-based
 		this.subComponent = matcher.group(6) != null ? Integer.parseInt(matcher.group(6)) - 1 : null; // subcomponents 1-based
+		this.hasExplicitComponent = path.matches(".+-\\d+-\\d+.*");
 	}
 
 	public String getSegment() { return segment; }
@@ -38,6 +40,7 @@ public class HPRIMPath {
 	public Integer getFieldRepetition() { return fieldRepetition; }
 	public Integer getComponent() { return component; }
 	public Integer getSubComponent() { return subComponent; }
+	public boolean hasExplicitComponent() { return hasExplicitComponent; }
 
 	@Override
 	public String toString() {
