@@ -200,7 +200,6 @@ public class Mapper {
 			case "XML":
 				return XML_MIME_TYPE;
 			case "HL7v2":
-				return HL7v2_MIME_TYPE;
 			case "HPRIM":
 				return HL7v2_MIME_TYPE;
 			default:

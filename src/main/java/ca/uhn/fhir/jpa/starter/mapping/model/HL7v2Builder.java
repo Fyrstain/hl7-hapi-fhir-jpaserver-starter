@@ -35,7 +35,6 @@ public class HL7v2Builder {
 
 		Integer segToken = token(m.group(2));
 		int fieldIndex = Integer.parseInt(m.group(3)) - 1;
-
 		Integer repToken = token(m.group(4));
 		Integer compToken = token(m.group(5));
 		Integer subToken = token(m.group(6));
@@ -55,19 +54,27 @@ public class HL7v2Builder {
 
 		List<String> comps = reps.get(repIndex);
 
-		int compIndex = compToken != null ? resolveIndex(compToken, comps.size()) : 0;
+		int compIndex;
+		if (compToken != null) {
+			compIndex = compToken == -1 ? comps.size() : compToken - 1;
+		} else {
+			compIndex = 0;
+		}
 		ensureSize(comps, compIndex + 1, () -> "");
 
 		if (subToken != null) {
 			String existing = comps.get(compIndex);
-			List<String> subs = existing != null && existing.contains(SUBCOMP_SEP)
+			List<String> subs = existing != null && !existing.isEmpty()
 				? new ArrayList<>(Arrays.asList(existing.split(SUBCOMP_SEP, -1)))
 				: new ArrayList<>();
 
-			int subIndex = resolveIndex(subToken, subs.size());
-			ensureSize(subs, subIndex + 1, () -> "");
-			subs.set(subIndex, value);
-
+			int subIndex = subToken == -1 ? subs.size() : subToken - 1; // HL7 1-based
+			if (subIndex == subs.size()) {
+				subs.add(value);
+			} else {
+				ensureSize(subs, subIndex + 1, () -> "");
+				subs.set(subIndex, value);
+			}
 			comps.set(compIndex, String.join(SUBCOMP_SEP, subs));
 		} else {
 			comps.set(compIndex, value);
