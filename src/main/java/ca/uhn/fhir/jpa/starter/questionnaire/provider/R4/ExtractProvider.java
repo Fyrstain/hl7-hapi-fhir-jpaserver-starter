@@ -37,7 +37,7 @@ public class ExtractProvider {
     @Operation(name = "$extract", type = QuestionnaireResponse.class)
     public IBaseBundle extract(@IdParam IdType id) {
         return new CustomQuestionnaireResponseProcessor(
-                new RestRepository(context.getRestfulClientFactory().newGenericClient(remoteUrl)))
+			  new RestRepository(context.getRestfulClientFactory().newGenericClient(remoteUrl)))
                 .extract(Eithers.for2(id, null));
     }
 
@@ -50,7 +50,7 @@ public class ExtractProvider {
     @Operation(name = "$extract", type = QuestionnaireResponse.class)
     public IBaseBundle extract(@OperationParam(name = "questionnaire-response") QuestionnaireResponse questionnaireResponse) {
         return new CustomQuestionnaireResponseProcessor(
-                new RestRepository(context.getRestfulClientFactory().newGenericClient(remoteUrl)))
+			  new RestRepository(context.getRestfulClientFactory().newGenericClient(remoteUrl)))
                 .extract(Eithers.for2(null, questionnaireResponse));
     }
 
