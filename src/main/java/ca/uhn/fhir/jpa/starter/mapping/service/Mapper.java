@@ -1407,9 +1407,22 @@ public class Mapper {
 							throw new FHIRException(String.format("Cast to %s not yet supported", castTarget));
 					}
 				case APPEND:
-					StringBuilder sb = new StringBuilder(getParamStringNoNull(context.getVariables(), context.getTarget().getParameter().get(0), context.getTarget().toString()));
+					StringBuilder sb = new StringBuilder(
+						normalizeAppendParam(
+							getParamStringNoNull(
+								context.getVariables(),
+								context.getTarget().getParameter().get(0),
+								context.getTarget().toString()
+							)
+						)
+					);
 					for (int i = 1; i < context.getTarget().getParameter().size(); i++) {
-						sb.append(getParamStringNoNull(context.getVariables(), context.getTarget().getParameter().get(i), context.getTarget().toString()));
+						String paramValue = getParamStringNoNull(
+							context.getVariables(),
+							context.getTarget().getParameter().get(i),
+							context.getTarget().toString()
+						);
+						sb.append(normalizeAppendParam(paramValue));
 					}
 					return new StringType(sb.toString());
 				case TRANSLATE:
@@ -1534,6 +1547,23 @@ public class Mapper {
 			throw new FHIRException(String.format("Exception executing transform %s on Rule \"%s\": %s",
 				context.getTarget().toString(), context.getRule().getName(), e.getMessage()), e);
 		}
+	}
+
+	private String normalizeAppendParam(String value) {
+		if (value == null) {
+			return "";
+		}
+		String cleaned = value.trim();
+
+		if (cleaned.matches("(?i)(&?nbsp;?)+")) {
+			int count = cleaned.replaceAll("(?i)[^n]", "").length();
+			return " ".repeat(Math.max(1, count));
+		}
+
+		if (value.equals(" ")) {
+			return " ";
+		}
+		return value;
 	}
 
 	/**
