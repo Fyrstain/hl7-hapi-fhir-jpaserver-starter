@@ -913,10 +913,19 @@ public class Mapper {
 		}
 		return skip ? new ArrayList<>() : items;
 	}
-	private String normalizeSegmentName(String name) {
-		return name.replaceAll("\\d+$", "");
-	}
 
+	private String normalizeSegmentName(String name) {
+		if (name == null) return null;
+
+		if (name.matches("^[A-Z]{2}\\d.*")) {
+			return name.substring(0, 3);
+		}
+
+		if (name.matches("^[A-Z]{3,}\\d+$")) {
+			return name.replaceAll("\\d+$", "");
+		}
+		return name;
+	}
 
 	/**
 	 * Converts an object (GenericSegment or typed Segment) to GenericSegment
@@ -2288,7 +2297,11 @@ public class Mapper {
 						element = element.makeProperty(elementPath.hashCode(), elementPath);
 					}
 				} else {
-					element = element.setProperty(elementPath.hashCode(), elementPath, property);
+					if (element instanceof org.hl7.fhir.r4.model.Narrative && "div".equals(elementPath) && property instanceof org.hl7.fhir.r4.model.StringType) {
+						((org.hl7.fhir.r4.model.Narrative) element).setDivAsString(((org.hl7.fhir.r4.model.StringType) property).getValue());
+					} else {
+						element = element.setProperty(elementPath.hashCode(), elementPath, property);
+					}
 				}
 			}
 		}
