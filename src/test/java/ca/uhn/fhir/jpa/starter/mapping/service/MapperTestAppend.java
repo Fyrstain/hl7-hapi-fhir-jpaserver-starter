@@ -164,4 +164,44 @@ public class MapperTestAppend {
 		StringType result = (StringType) m.invoke(mapper, ctx, null, true);
 		assertEquals("DOE JOHN", result.getValue());
 	}
+
+	@Test
+	void processTarget_shouldSupportAppendIntoXhtmlDiv() throws Exception {
+		Mapper mapper = new Mapper(null, null, null, null, null);
+
+		Encounter enc = new Encounter();
+
+		StructureMap.StructureMapGroupRuleTargetComponent target =
+			new StructureMap.StructureMapGroupRuleTargetComponent();
+		target.setContext("target");
+		target.setElement("text.div");
+		target.setTransform(StructureMap.StructureMapTransform.APPEND);
+
+		target.addParameter().setValue(new StringType("<div xmlns=\"http://www.w3.org/1999/xhtml\">"));
+		target.addParameter().setValue(new StringType("Hello"));
+		target.addParameter().setValue(new StringType("nbsp"));
+		target.addParameter().setValue(new StringType("World"));
+		target.addParameter().setValue(new StringType("</div>"));
+
+		StructureMap.StructureMapGroupRuleComponent rule = new StructureMap.StructureMapGroupRuleComponent();
+		rule.setName("ruleX");
+
+		Variables vars = mock(Variables.class);
+		when(vars.get(any(), eq("target"))).thenReturn(enc);
+
+		MappingContext ctx = mock(MappingContext.class);
+		when(ctx.getTarget()).thenReturn(target);
+		when(ctx.getRule()).thenReturn(rule);
+		when(ctx.getVariables()).thenReturn(vars);
+
+		Method m = Mapper.class.getDeclaredMethod("processTarget", MappingContext.class, boolean.class);
+		m.setAccessible(true);
+		m.invoke(mapper, ctx, true);
+
+		assertNotNull(enc.getText());
+		assertEquals(
+			"<div xmlns=\"http://www.w3.org/1999/xhtml\">Hello World</div>",
+			enc.getText().getDivAsString()
+		);
+	}
 }
