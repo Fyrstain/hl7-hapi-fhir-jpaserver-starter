@@ -6,12 +6,10 @@ import ca.uhn.fhir.jpa.ips.generator.IIpsGeneratorSvc;
 import ca.uhn.fhir.jpa.ips.generator.IpsGeneratorSvcImpl;
 import ca.uhn.fhir.jpa.ips.jpa.DefaultJpaIpsGenerationStrategy;
 import ca.uhn.fhir.jpa.ips.provider.IpsOperationProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Conditional;
 
-@Configuration
-@ConditionalOnProperty(name = "hapi.fhir.ips_enabled", havingValue = "true")
+@Conditional(IpsConfigCondition.class)
 public class StarterIpsConfig {
 	@Bean
 	IIpsGenerationStrategy ipsGenerationStrategy() {
