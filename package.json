@@ -1,0 +1,31 @@
+{
+  "name": "cohorting-datamart-engine",
+  "version": "0.1.1",
+  "description": "HAPI FHIR with cohorting and datamart engine features",
+  "main": "/app/main.war",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker-build:dev": "docker build --build-arg PRODUCT=cohorting-datamart-engines --build-arg VERSION=$(git rev-parse --short HEAD) -t docker.registry.fyrstain.com/cal/cohorting-datamart-engines:$(git rev-parse --short HEAD) -t docker.registry.fyrstain.com/cal/cohorting-datamart-engines:latest .",
+    "docker-build:release": "docker build --build-arg PRODUCT=cohorting-datamart-engines --build-arg VERSION=$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD) -t docker.registry.fyrstain.com/cal/cohorting-datamart-engines:$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD) .",
+    "docker-push:dev": "docker push docker.registry.fyrstain.com/cal/cohorting-datamart-engines:$(git rev-parse --short HEAD)",
+    "docker-push:release": "docker push docker.registry.fyrstain.com/cal/cohorting-datamart-engines:$(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD)",
+    "release":"npm run docker-build:release && npm run docker-push:release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fyrstain/hapi-fhir-jpaserver-starter-cal.git"
+  },
+  "keywords": [
+    "HAPI",
+    "FHIR",
+    "CAL",
+    "Datamart",
+    "Cohorting"
+  ],
+  "author": "Omar Guendouz <omar.guendouz@fyrstain.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Fyrstain/hapi-fhir-jpaserver-starter-cal/issues"
+  },
+  "homepage": "https://github.com/Fyrstain/hapi-fhir-jpaserver-starter-cal#readme"
+}

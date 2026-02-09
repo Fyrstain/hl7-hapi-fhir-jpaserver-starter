@@ -7,7 +7,7 @@ image:
   # -- the path inside the repository
   repository: hapiproject/hapi
   # -- the image tag. As of v5.7.0, this is the `distroless` flavor by default, add `-tomcat` to use the Tomcat-based image.
-  tag: "v8.6.0-1@sha256:7611e4d6601f35dd8c223ed2ed47a2807be06976f71b2e5990e6541bbc90c16f"
+  tag: "v7.6.0@sha256:4771a178e764896c83881c1b3a52bd487e53d06e1acc3653ea0db0c6f6b2b8a1"
   # -- image pullPolicy to use
   pullPolicy: IfNotPresent
 
@@ -114,19 +114,11 @@ topologySpreadConstraints:
   #       app.kubernetes.io/instance: hapi-fhir-jpaserver
   #       app.kubernetes.io/name: hapi-fhir-jpaserver
 
-# @ignored
-# used by the bitnami sub-chart. Allowing it allows for overrding the image repository.
-global:
-  security:
-    allowInsecureImages: true
-
 postgresql:
   # -- enable an included PostgreSQL DB.
   # see <https://github.com/bitnami/charts/tree/master/bitnami/postgresql> for details
   # if set to `false`, the values under `externalDatabase` are used
   enabled: true
-  image:
-    repository: bitnamilegacy/postgresql
   auth:
     # -- name for a custom database to create
     database: "fhir"
@@ -249,7 +241,7 @@ curl:
   image:
     registry: docker.io
     repository: curlimages/curl
-    tag: 8.14.1@sha256:9a1ed35addb45476afa911696297f8e115993df459278ed036182dd2cd22b67b
+    tag: 8.11.1@sha256:c1fe1679c34d9784c1b0d1e5f62ac0a79fca01fb6377cdd33e90473c6f9f9a69
 
 tests:
   # -- whether the service account token should be auto-mounted for the test pods
@@ -308,12 +300,3 @@ extraVolumes: []
 
 # -- Optionally specify extra list of additional volumeMounts
 extraVolumeMounts: []
-
-waitForDatabaseInitContainer:
-  # -- image to use for the init container which waits until the database
-  # is ready to accept connections
-  image:
-    registry: docker.io
-    repository: bitnamilegacy/postgresql
-    tag: 17.6.0-debian-12-r4@sha256:926356130b77d5742d8ce605b258d35db9b62f2f8fd1601f9dbaef0c8a710a8d
-    pullPolicy: IfNotPresent

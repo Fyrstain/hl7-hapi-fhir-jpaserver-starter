@@ -21,7 +21,8 @@ public class CustomInterceptorBean {
 		IBaseResource resource = servletRequestDetails.getResource();
 
 		// add an extension before saving the resource to mark it
-		if (opType == RestOperationTypeEnum.CREATE && resource instanceof Patient pat) {
+		if (opType == RestOperationTypeEnum.CREATE && resource instanceof Patient) {
+			Patient pat = (Patient) resource;
 			Extension ext = pat.addExtension();
 			ext.setUrl("http://some.custom.pkg1/CustomInterceptorBean");
 			ext.setValue(new StringType("CustomInterceptorBean wuz here"));

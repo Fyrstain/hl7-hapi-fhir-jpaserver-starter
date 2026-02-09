@@ -20,12 +20,10 @@ jobs:
       - name: spotless:check
         run: mvn spotless:check
       -  uses: mshick/add-pr-comment@v2
-         # Only run if the previous step failed
-         if: failure() && steps.spotless_check.outcome == 'failure'
+         if: always()
          with:
-           proxy-url: https://slack-bots.azure.smilecdr.com/robogary/github
            message-success: |
-             Formatting check succeeded! This should never run, because the step is skipped on workflow success.
+             Formatting check succeeded!
            message-failure: |
              **This Pull Request has failed the formatting check**
              
