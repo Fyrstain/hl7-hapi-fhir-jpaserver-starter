@@ -91,8 +91,7 @@ public class TransformerService implements StructureMapUtilities.ITransformerSer
 			}
 		}
 
-		throw new FHIRException("No translation match found for coding: "
-			+ source.getSystem() + "|" + source.getCode());
+		return null;
 	}
 
 	@Override

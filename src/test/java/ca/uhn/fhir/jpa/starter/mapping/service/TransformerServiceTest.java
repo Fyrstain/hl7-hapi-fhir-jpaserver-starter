@@ -91,15 +91,16 @@ class TransformerServiceTest {
     }
 
     @Test
-    void translate_shouldThrowException_whenNoMatchFound() throws Exception {
+    void translate_shouldReturnNull_whenNoMatchFound() throws Exception {
         Coding source = new Coding("system", "code", null);
 
         Parameters emptyResponse = new Parameters();
         when(mockOperationExecute.execute()).thenReturn(emptyResponse);
 
-        assertThrows(FHIRException.class,
-                () -> transformerService.translate(null, source, "http://conceptmap"));
-    }
+		 Coding translate = transformerService.translate(null, source, "http://conceptmap");
+
+		 assertNull(translate);
+	 }
 
     @Test
     void translate_shouldThrowException_whenServerFails() throws Exception {
