@@ -52,6 +52,7 @@ import ca.uhn.fhir.jpa.starter.common.validation.IRepositoryValidationIntercepto
 import ca.uhn.fhir.jpa.starter.elastic.ElasticsearchBootSvcImpl;
 import ca.uhn.fhir.jpa.starter.ig.ExtendedPackageInstallationSpec;
 import ca.uhn.fhir.jpa.starter.ig.IImplementationGuideOperationProvider;
+import ca.uhn.fhir.jpa.starter.errorreport.ErrorReportingExceptionInterceptor;
 import ca.uhn.fhir.jpa.subscription.util.SubscriptionDebugLogInterceptor;
 import ca.uhn.fhir.jpa.util.ResourceCountCache;
 import ca.uhn.fhir.mdm.provider.MdmProviderLoader;
@@ -334,6 +335,7 @@ public class StarterJpaConfig {
 			ApplicationContext appContext,
 			Optional<IpsOperationProvider> theIpsOperationProvider,
 			Optional<IImplementationGuideOperationProvider> implementationGuideOperationProvider,
+			Optional<ErrorReportingExceptionInterceptor> errorReportingExceptionInterceptor,
 			DiffProvider diffProvider) {
 		RestfulServer fhirServer = new RestfulServer(fhirSystemDao.getContext());
 
@@ -454,6 +456,8 @@ public class StarterJpaConfig {
 		if (appProperties.getBinary_storage_enabled() && binaryAccessProvider.isPresent()) {
 			fhirServer.registerProvider(binaryAccessProvider.get());
 		}
+
+      errorReportingExceptionInterceptor.ifPresent(fhirServer::registerInterceptor);
 
 		// Validation
 
