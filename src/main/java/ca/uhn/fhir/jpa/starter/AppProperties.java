@@ -130,6 +130,7 @@ public class AppProperties {
 	private Integer reindex_thread_count = null;
 	private Integer expunge_thread_count = null;
 	private Elasticsearch elasticsearch = null;
+	private SentryProperties sentry = null;
 
 	private Integer bulk_export_file_retention_period_hours = 2;
 
@@ -858,6 +859,14 @@ public class AppProperties {
 		this.elasticsearch = elasticsearch;
 	}
 
+	public SentryProperties getSentry() {
+		return sentry;
+	}
+
+	public void setSentry(SentryProperties sentry) {
+		this.sentry = sentry;
+	}
+
 	public Integer getBulk_export_file_retention_period_hours() {
 		return bulk_export_file_retention_period_hours;
 	}
@@ -1226,6 +1235,95 @@ public class AppProperties {
 
 		public void setIndex_prefix(String index_prefix) {
 			this.index_prefix = index_prefix;
+		}
+	}
+
+	public static class SentryProperties {
+		/**
+		 * Master switch. Must be true AND DSN must be provided to activate Sentry.
+		 */
+		private boolean enabled = false;
+		/**
+		 * Sentry DSN.
+		 */
+		private String dsn;
+		/**
+		 * Environment tag (dev, staging, prod, etc.).
+		 */
+		private String environment;
+		/**
+		 * Release version (e.g. git SHA or app version).
+		 */
+		private String release;
+		/**
+		 * Logical service name (e.g. hapi-jpa-starter, mapping-engine). Default: hapi-jpa-starter
+		 */
+		private String serviceName = "hapi-jpa-starter";
+		/**
+		 * Enable performance tracing.
+		 */
+		private boolean tracesEnabled = false;
+		/**
+		 * Sample rate for tracing (0.0 to 1.0).
+		 */
+		private double tracesSampleRate = 0.0;
+
+		// --- getters & setters ---
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public String getDsn() {
+			return dsn;
+		}
+
+		public void setDsn(String dsn) {
+			this.dsn = dsn;
+		}
+
+		public String getEnvironment() {
+			return environment;
+		}
+
+		public void setEnvironment(String environment) {
+			this.environment = environment;
+		}
+
+		public String getRelease() {
+			return release;
+		}
+
+		public void setRelease(String release) {
+			this.release = release;
+		}
+
+		public String getServiceName() {
+			return serviceName;
+		}
+
+		public void setServiceName(String serviceName) {
+			this.serviceName = serviceName;
+		}
+
+		public boolean isTracesEnabled() {
+			return tracesEnabled;
+		}
+
+		public void setTracesEnabled(boolean tracesEnabled) {
+			this.tracesEnabled = tracesEnabled;
+		}
+
+		public double getTracesSampleRate() {
+			return tracesSampleRate;
+		}
+
+		public void setTracesSampleRate(double tracesSampleRate) {
+			this.tracesSampleRate = tracesSampleRate;
 		}
 	}
 }
