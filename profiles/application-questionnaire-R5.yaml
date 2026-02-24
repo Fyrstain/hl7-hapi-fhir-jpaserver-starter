@@ -1,0 +1,12 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+hapi:
+  fhir:
+    cr:
+      enabled: false
+    fhir_version: R5
+
+remote:
+  url: https://demonstrator.ovh.fyrstain.com/orchestrator

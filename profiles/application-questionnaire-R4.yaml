@@ -1,0 +1,8 @@
+hapi:
+  fhir:
+    cr:
+      enabled: false
+    fhir_version: R4
+
+remote:
+  url: https://demonstrator.ovh.fyrstain.com/orchestrator

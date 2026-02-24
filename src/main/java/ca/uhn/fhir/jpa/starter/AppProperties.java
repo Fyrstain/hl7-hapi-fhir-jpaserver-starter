@@ -32,6 +32,8 @@ public class AppProperties {
 	private final List<String> custom_interceptor_classes = new ArrayList<>();
 	private final List<String> custom_provider_classes = new ArrayList<>();
 	private Boolean cr_enabled = false;
+	private Boolean questionnaire_r4_enabled = false;
+	private Boolean questionnaire_r5_enabled = false;
 	private Boolean ips_enabled = false;
 	private Boolean openapi_enabled = false;
 	private Boolean mdm_enabled = false;
@@ -193,6 +195,22 @@ public class AppProperties {
 
 	public void setCr_enabled(Boolean cr_enabled) {
 		this.cr_enabled = cr_enabled;
+	}
+
+	public Boolean getQuestionnaire_r4_enabled() {
+		return questionnaire_r4_enabled;
+	}
+
+	public void setQuestionnaire_r4_enabled(Boolean questionnaire_r4_enabled) {
+		this.questionnaire_r4_enabled = questionnaire_r4_enabled;
+	}
+
+	public Boolean getQuestionnaire_r5_enabled() {
+		return questionnaire_r5_enabled;
+	}
+
+	public void setQuestionnaire_r5_enabled(Boolean questionnaire_r5_enabled) {
+		this.questionnaire_r5_enabled = questionnaire_r5_enabled;
 	}
 
 	public Boolean getIps_enabled() {
