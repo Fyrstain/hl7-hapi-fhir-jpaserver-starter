@@ -2,6 +2,7 @@ package ca.uhn.fhir.jpa.starter.questionnaire.provider.R4;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.starter.annotations.OnR4Condition;
+import ca.uhn.fhir.jpa.starter.questionnaire.provider.IPopulateProvider;
 import ca.uhn.fhir.rest.annotation.IdParam;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.OperationParam;
@@ -18,7 +19,7 @@ import java.util.List;
 
 @Component
 @Conditional(OnR4Condition.class)
-public class PopulateProvider {
+public class PopulateProvider implements IPopulateProvider {
 
     @Value("${remote.url}")
     private String remoteUrl;

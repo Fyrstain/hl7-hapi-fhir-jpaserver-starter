@@ -2,6 +2,7 @@ package ca.uhn.fhir.jpa.starter.questionnaire.provider.R4;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.starter.annotations.OnR4Condition;
+import ca.uhn.fhir.jpa.starter.questionnaire.provider.IExtractProvider;
 import ca.uhn.fhir.rest.annotation.IdParam;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.OperationParam;
@@ -20,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Primary
 @Conditional(OnR4Condition.class)
-public class ExtractProvider {
+public class ExtractProvider implements IExtractProvider {
 
     @Value("${remote.url}")
     private String remoteUrl;

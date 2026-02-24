@@ -3,9 +3,6 @@ hapi:
     cr:
       enabled: false
     fhir_version: R4
-    custom_provider_classes:
-      - ca.uhn.fhir.jpa.starter.questionnaire.provider.R4.ExtractProvider
-      - ca.uhn.fhir.jpa.starter.questionnaire.provider.R4.PopulateProvider
 
 remote:
   url: https://demonstrator.ovh.fyrstain.com/orchestrator
