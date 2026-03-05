@@ -1,9 +1,9 @@
 package ca.uhn.fhir.jpa.starter.mapping.model;
 
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.*;
 
 public class HL7v2Builder {
 
@@ -14,20 +14,49 @@ public class HL7v2Builder {
 	private static final String SUBCOMP_SEP = "&";
 
 	private static final Pattern PATH_PATTERN = Pattern.compile(
-			"([A-Z0-9]{2,3})" + // SEG
-					"(?:\\[(\\d+|\\+)])?"
-					+ // SEG[index|+]
-					"-(\\d+)"
-					+ // FIELD
-					"(?:\\[(\\d+|\\+)])?"
-					+ // REP[index|+]
-					"(?:-(\\d+|\\+))?"
-					+ // COMP[index|+]
-					"(?:-(\\d+|\\+))?"
-					+ // SUB
-					"(?:\\.value)?" // optional .value
-			);
+		"([A-Z0-9]{2,3})" +           // SEG
+			"(?:\\[(\\d+|\\+|=)])?" +        // SEG[index|+|=]
+			"-(\\d+)" +                      // FIELD
+			"(?:\\[(\\d+|\\+|=)])?" +        // REP[index|+|=]
+			"(?:-(\\d+|\\+|=))?" +           // COMP[index|+|=]
+			"(?:-(\\d+|\\+|=))?" +           // SUB[index|+|=]
+			"(?:\\.value)?"
+	);
 	private final Map<String, List<List<List<List<String>>>>> message = new LinkedHashMap<>();
+	private final Map<String, Integer> lastSegIndex = new HashMap<>();
+	private final Map<String, Integer> lastRepIndex = new HashMap<>();
+	private final Map<String, Integer> lastCompIndex = new HashMap<>();
+	private final Map<String, Integer> lastSubIndex = new HashMap<>();
+
+	private static <T> void ensureSize(List<T> list, int size, Supplier<T> factory) {
+		while (list.size() < size) {
+			list.add(factory.get());
+		}
+	}
+
+	private static List<String> nullToEmpty(List<String> list) {
+		List<String> result = new ArrayList<>();
+		for (String s : list) {
+			result.add(s == null ? "" : s);
+		}
+		return result;
+	}
+
+	private static String keySeg(String seg) {
+		return seg;
+	}
+
+	private static String keyRep(String seg, int field) {
+		return seg + "-" + field;
+	}
+
+	private static String keyComp(String seg, int field, int rep) {
+		return seg + "-" + field + "[" + rep + "]";
+	}
+
+	private static String keySub(String seg, int field, int rep, int comp) {
+		return seg + "-" + field + "[" + rep + "]-" + comp;
+	}
 
 	public void putByPath(String path, String value) {
 		Matcher m = PATH_PATTERN.matcher(path);
@@ -45,41 +74,64 @@ public class HL7v2Builder {
 
 		message.computeIfAbsent(segmentName, k -> new ArrayList<>());
 		List<List<List<List<String>>>> segments = message.get(segmentName);
+		String segKey = keySeg(segmentName);
 
-		int segIndex = resolveIndex(segToken, segments.size());
+		// SEG
+		int segIndex = resolveIndex(segToken, segments.size(), lastSegIndex.get(segKey));
 		ensureSize(segments, segIndex + 1, ArrayList::new);
+		lastSegIndex.put(segKey, segIndex);
 
+		// FIELD (pas de token '=', c'est un numéro HL7)
 		List<List<List<String>>> fields = segments.get(segIndex);
 		ensureSize(fields, fieldIndex + 1, ArrayList::new);
 
+		// REP
 		List<List<String>> reps = fields.get(fieldIndex);
-		int repIndex = resolveIndex(repToken, reps.size());
+		String repKey = keyRep(segmentName, fieldIndex);
+		int repIndex = resolveIndex(repToken, reps.size(), lastRepIndex.get(repKey));
 		ensureSize(reps, repIndex + 1, ArrayList::new);
+		lastRepIndex.put(repKey, repIndex);
 
+		// COMP
 		List<String> comps = reps.get(repIndex);
+		String compKey = keyComp(segmentName, fieldIndex, repIndex);
 
 		int compIndex;
 		if (compToken != null) {
-			compIndex = compToken == -1 ? comps.size() : compToken - 1;
+			if (compToken == -1) compIndex = comps.size(); // [+]
+			else if (compToken == -2) {
+				Integer last = lastCompIndex.get(compKey);
+				// NEW: if '=' but nothing yet, create/use first component
+				compIndex = (last != null) ? last : 0;
+			} else compIndex = compToken - 1;              // HL7 1-based
 		} else {
 			compIndex = 0;
 		}
 		ensureSize(comps, compIndex + 1, () -> "");
+		lastCompIndex.put(compKey, compIndex);
 
+		// SUB (si tu veux gérer [=] aussi)
 		if (subToken != null) {
+			String subKey = keySub(segmentName, fieldIndex, repIndex, compIndex);
+
 			String existing = comps.get(compIndex);
 			List<String> subs = existing != null && !existing.isEmpty()
-					? new ArrayList<>(Arrays.asList(existing.split(SUBCOMP_SEP, -1)))
-					: new ArrayList<>();
+				? new ArrayList<>(Arrays.asList(existing.split(SUBCOMP_SEP, -1)))
+				: new ArrayList<>();
 
-			int subIndex = subToken == -1 ? subs.size() : subToken - 1; // HL7 1-based
-			if (subIndex == subs.size()) {
-				subs.add(value);
-			} else {
-				ensureSize(subs, subIndex + 1, () -> "");
-				subs.set(subIndex, value);
-			}
+			int subIndex;
+			if (subToken == -1) subIndex = subs.size(); // [+]
+			else if (subToken == -2) {
+				Integer last = lastSubIndex.get(subKey);
+				// NEW: if '=' but nothing yet, create/use first subcomponent
+				subIndex = (last != null) ? last : 0;
+			} else subIndex = subToken - 1; // HL7 1-based
+
+			ensureSize(subs, subIndex + 1, () -> "");
+			subs.set(subIndex, value);
 			comps.set(compIndex, String.join(SUBCOMP_SEP, subs));
+
+			lastSubIndex.put(subKey, subIndex);
 		} else {
 			comps.set(compIndex, value);
 		}
@@ -127,28 +179,23 @@ public class HL7v2Builder {
 		return sb.toString();
 	}
 
-	private static <T> void ensureSize(List<T> list, int size, Supplier<T> factory) {
-		while (list.size() < size) {
-			list.add(factory.get());
-		}
-	}
-
-	private static List<String> nullToEmpty(List<String> list) {
-		List<String> result = new ArrayList<>();
-		for (String s : list) {
-			result.add(s == null ? "" : s);
-		}
-		return result;
-	}
-
 	private Integer token(String raw) {
 		if (raw == null) return null;
-		return "+".equals(raw) ? -1 : Integer.parseInt(raw);
+		if ("+".equals(raw)) return -1;
+		if ("=".equals(raw)) return -2;
+		return Integer.parseInt(raw);
 	}
 
-	private int resolveIndex(Integer token, int currentSize) {
+	private int resolveIndex(Integer token, int currentSize, Integer last) {
 		if (token == null) return 0;
-		if (token == -1) return currentSize;
+		if (token == -1) return currentSize;              // [+]
+		if (token == -2) {                                // [=]
+			// NEW: auto-create / fallback if no previous index exists
+			if (last == null) {
+				return 0;
+			}
+			return last;
+		}
 		return token;
 	}
 
