@@ -173,4 +173,85 @@ public class MapperTestDateOp {
 
 		return structureMap;
 	}
+
+	@Test
+	void mapHL7v2ToFHIRTestDateNoFhir() {
+		FhirContext context = FhirContext.forR4();
+		PrePopulatedValidationSupport prePopulatedValidationSupport = new PrePopulatedValidationSupport(context);
+		this.validationSupport = new ValidationSupportChain(prePopulatedValidationSupport, new DefaultProfileValidationSupport(context));
+
+		this.hapiContext = new HapiWorkerContext(context, this.validationSupport);
+
+		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
+
+		IGenericClient clientStructureMap = null;
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+
+		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
+		param.setName("input");
+
+		param.addPart(new Parameters.ParametersParameterComponent().setName("source")
+			.setResource(new Binary().setContentType("text/x-hl7-ft").setContentAsBase64(Base64.encode(hl7v2MessageTime.getBytes()))));
+
+		Parameters parameters = new Parameters().addParameter(param);
+
+		Parameters result = mapper.map(getStructureMapDateNoFhir(), parameters);
+
+		assertNotNull(result);
+		assertNotNull(result.getParameter("target").getResource());
+		assertInstanceOf(Binary.class, result.getParameter("target").getResource());
+
+		Observation observation = (Observation) context.newJsonParser()
+			.parseResource(new ByteArrayInputStream(((Binary) result.getParameter("target").getResource()).getContent()));
+
+		assertInstanceOf(StringType.class, observation.getValue());
+		assertEquals("2012-04-10 16:02:27", ((StringType) observation.getValue()).getValue());
+	}
+
+	private StructureMap getStructureMapDateNoFhir() {
+		StructureMap structureMap = new StructureMap();
+		structureMap.setUrl("http://example.org/base");
+
+		StructureMap.StructureMapGroupComponent group = new StructureMap.StructureMapGroupComponent();
+		group.setName("main");
+		group.setTypeMode(StructureMap.StructureMapGroupTypeMode.NONE);
+
+		StructureMap.StructureMapGroupInputComponent inputSource = new StructureMap.StructureMapGroupInputComponent();
+		inputSource.setName("source");
+		inputSource.setType("HL7v2");
+		inputSource.setMode(StructureMap.StructureMapInputMode.SOURCE);
+
+		StructureMap.StructureMapGroupInputComponent inputTarget = new StructureMap.StructureMapGroupInputComponent();
+		inputTarget.setName("target");
+		inputTarget.setType("Observation");
+		inputTarget.setMode(StructureMap.StructureMapInputMode.TARGET);
+
+		group.addInput(inputSource);
+		group.addInput(inputTarget);
+
+		StructureMap.StructureMapGroupRuleComponent rule = group.addRule().setName("dateNoFhirRule");
+		rule.addSource()
+			.setContext("source")
+			.setType("string")
+			.setElement("OBR-7")
+			.setVariable("obrObservationDateTime");
+
+		rule.addTarget()
+			.setContext("target")
+			.setContextType(StructureMap.StructureMapContextType.VARIABLE)
+			.setElement("value")
+			.setTransform(StructureMap.StructureMapTransform.DATEOP)
+			.addParameter(new StructureMap.StructureMapGroupRuleTargetParameterComponent()
+				.setValue(new IdType("obrObservationDateTime")))
+			.addParameter(new StructureMap.StructureMapGroupRuleTargetParameterComponent()
+				.setValue(new StringType("yyyyMMddHHmmss")))
+			.addParameter(new StructureMap.StructureMapGroupRuleTargetParameterComponent()
+				.setValue(new StringType("yyyy-MM-dd HH:mm:ss")))
+			.addParameter(new StructureMap.StructureMapGroupRuleTargetParameterComponent()
+				.setValue(new StringType("noFHIR")));
+
+		structureMap.addGroup(group);
+
+		return structureMap;
+	}
 }
