@@ -1725,12 +1725,6 @@ public class Mapper {
 
 							return new DateType(Date.from(ld.atStartOfDay(ZoneOffset.UTC).toInstant()));
 						} catch (Exception e2) {
-							if (looksLikeDate(dateSource)) {
-								throw new IllegalArgumentException(
-									String.format("Could not parse date '%s' with input format '%s'", dateSource, inputFormat),
-									e2);
-							}
-
 							try {
 								LocalTime lt = LocalTime.parse(dateSource, inputFormatter);
 
@@ -1751,11 +1745,15 @@ public class Mapper {
 								return new TimeType(formatted);
 
 							} catch (Exception e3) {
+								if (looksLikeDate(dateSource)) {
+									throw new IllegalArgumentException(
+										String.format("Could not parse date '%s' with input format '%s'", dateSource, inputFormat),
+										e2);
+								}
+
 								throw new IllegalArgumentException(
-										String.format(
-												"Could not parse date/time '%s' with input format '%s'",
-												dateSource, inputFormat),
-										e3);
+									String.format("Could not parse date/time '%s' with input format '%s'", dateSource, inputFormat),
+									e3);
 							}
 						}
 					}
