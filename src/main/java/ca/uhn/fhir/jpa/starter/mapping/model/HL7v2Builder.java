@@ -1,8 +1,8 @@
 package ca.uhn.fhir.jpa.starter.mapping.model;
 
-import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.*;
 
 public class HL7v2Builder {
 
@@ -28,12 +28,15 @@ public class HL7v2Builder {
 	 * 6 = subcomponent number (optional)
 	 */
 	private static final Pattern PATH_PATTERN = Pattern.compile(
-		"^([A-Z0-9]{3})(?:\\[(\\+|=|\\d+)\\])?" +        // SEG[+]
-			"-(\\d+)" +                                   // -FIELD
-			"(?:\\[(\\+|=|\\d+)\\])?" +                   // [REP]
-			"(?:-(\\d+))?" +                              // -COMP
-			"(?:-(\\d+))?$"                               // -SUBCOMP
-	);
+			"^([A-Z0-9]{3})(?:\\[(\\+|=|\\d+)\\])?" + // SEG[+]
+					"-(\\d+)"
+					+ // -FIELD
+					"(?:\\[(\\+|=|\\d+)\\])?"
+					+ // [REP]
+					"(?:-(\\d+))?"
+					+ // -COMP
+					"(?:-(\\d+))?$" // -SUBCOMP
+			);
 
 	/**
 	 * Message stored in true insertion order.
@@ -61,8 +64,7 @@ public class HL7v2Builder {
 	 */
 	private final Map<String, Integer> lastSubIndex = new HashMap<>();
 
-	public HL7v2Builder() {
-	}
+	public HL7v2Builder() {}
 
 	private static String nullToEmpty(String value) {
 		return value == null ? "" : value;
@@ -181,7 +183,8 @@ public class HL7v2Builder {
 	}
 
 	private void putByPathWithComponentAppend(String path, String value) {
-		Matcher m = Pattern.compile("^([A-Z0-9]{3})(?:\\[(\\+|=|\\d+)\\])?-(\\d+)-\\+$").matcher(path);
+		Matcher m = Pattern.compile("^([A-Z0-9]{3})(?:\\[(\\+|=|\\d+)\\])?-(\\d+)-\\+$")
+				.matcher(path);
 		if (!m.matches()) {
 			throw new IllegalArgumentException("Invalid HL7v2 component append path: " + path);
 		}
@@ -303,8 +306,7 @@ public class HL7v2Builder {
 				int globalIndex = findSegmentOccurrence(segName, occurrence);
 				if (globalIndex < 0) {
 					throw new IllegalStateException(
-						"Segment occurrence not found: " + segName + "[" + occurrence + "]"
-					);
+							"Segment occurrence not found: " + segName + "[" + occurrence + "]");
 				}
 				lastSegIndex.put(segName, globalIndex);
 				return globalIndex;
@@ -337,12 +339,7 @@ public class HL7v2Builder {
 		return -1;
 	}
 
-	private int resolveRepetitionIndex(
-		int segIndex,
-		int fieldIndex,
-		List<List<String>> repetitions,
-		String repToken
-	) {
+	private int resolveRepetitionIndex(int segIndex, int fieldIndex, List<List<String>> repetitions, String repToken) {
 		String key = repKey(segIndex, fieldIndex);
 
 		if (repToken == null) {
@@ -391,12 +388,7 @@ public class HL7v2Builder {
 	}
 
 	private void setSimpleFieldValue(
-		int segIndex,
-		int fieldIndex,
-		int repIndex,
-		List<String> components,
-		String value
-	) {
+			int segIndex, int fieldIndex, int repIndex, List<String> components, String value) {
 		if (components.isEmpty()) {
 			components.add(nullToEmpty(value));
 		} else {
@@ -409,13 +401,7 @@ public class HL7v2Builder {
 		lastCompIndex.put(compKey(segIndex, fieldIndex, repIndex), compIndex);
 	}
 
-	private void rememberSubcomponent(
-		int segIndex,
-		int fieldIndex,
-		int repIndex,
-		int compIndex,
-		int subIndex
-	) {
+	private void rememberSubcomponent(int segIndex, int fieldIndex, int repIndex, int compIndex, int subIndex) {
 		lastSubIndex.put(subKey(segIndex, fieldIndex, repIndex, compIndex), subIndex);
 	}
 

@@ -1622,27 +1622,27 @@ public class Mapper {
 									: null);
 				case DATEOP:
 					String dateSource = getParamStringNoNull(
-						context.getVariables(),
-						context.getTarget().getParameter().get(0),
-						context.getTarget().toString());
+							context.getVariables(),
+							context.getTarget().getParameter().get(0),
+							context.getTarget().toString());
 					String inputFormat = getParamStringNoNull(
-						context.getVariables(),
-						context.getTarget().getParameter().get(1),
-						context.getTarget().toString());
+							context.getVariables(),
+							context.getTarget().getParameter().get(1),
+							context.getTarget().toString());
 
 					String param2 = (context.getTarget().getParameter().size() > 2)
-						? getParamStringNoNull(
-						context.getVariables(),
-						context.getTarget().getParameter().get(2),
-						context.getTarget().toString())
-						: null;
+							? getParamStringNoNull(
+									context.getVariables(),
+									context.getTarget().getParameter().get(2),
+									context.getTarget().toString())
+							: null;
 
 					String param3 = (context.getTarget().getParameter().size() > 3)
-						? getParamStringNoNull(
-						context.getVariables(),
-						context.getTarget().getParameter().get(3),
-						context.getTarget().toString())
-						: null;
+							? getParamStringNoNull(
+									context.getVariables(),
+									context.getTarget().getParameter().get(3),
+									context.getTarget().toString())
+							: null;
 
 					dateSource = normalize(dateSource);
 					inputFormat = normalize(inputFormat);
@@ -1664,23 +1664,25 @@ public class Mapper {
 					}
 
 					boolean forceInstant = "instant".equalsIgnoreCase(mode);
-					boolean forceTime    = "time".equalsIgnoreCase(mode);
-					boolean forceNoFhir  = "nofhir".equalsIgnoreCase(mode);
+					boolean forceTime = "time".equalsIgnoreCase(mode);
+					boolean forceNoFhir = "nofhir".equalsIgnoreCase(mode);
 
 					DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern(inputFormat);
-					DateTimeFormatter outputFormatter = (outputPattern != null) ? DateTimeFormatter.ofPattern(outputPattern) : null;
+					DateTimeFormatter outputFormatter =
+							(outputPattern != null) ? DateTimeFormatter.ofPattern(outputPattern) : null;
 
 					try {
 						LocalDateTime ldt = LocalDateTime.parse(dateSource, inputFormatter);
 
 						if (forceNoFhir) {
 							String out = (outputFormatter != null)
-								? ldt.atZone(ZoneOffset.UTC).format(outputFormatter)
-								: dateSource;
+									? ldt.atZone(ZoneOffset.UTC).format(outputFormatter)
+									: dateSource;
 							return new StringType(out);
 						}
 						if (forceInstant) {
-							return new InstantType(Date.from(ldt.atZone(ZoneOffset.UTC).toInstant()));
+							return new InstantType(
+									Date.from(ldt.atZone(ZoneOffset.UTC).toInstant()));
 						}
 						if (forceTime) {
 							LocalTime lt = ldt.toLocalTime();
@@ -1690,7 +1692,8 @@ public class Mapper {
 							String formatted = ldt.atZone(ZoneOffset.UTC).format(outputFormatter);
 							return new DateTimeType(formatted);
 						}
-						return new DateTimeType(Date.from(ldt.atZone(ZoneOffset.UTC).toInstant()));
+						return new DateTimeType(
+								Date.from(ldt.atZone(ZoneOffset.UTC).toInstant()));
 
 					} catch (Exception e1) {
 						try {
@@ -1699,7 +1702,8 @@ public class Mapper {
 							if (forceNoFhir) {
 								if (outputFormatter != null) {
 									if (patternNeedsTime(outputPattern)) {
-										String out = ld.atStartOfDay(ZoneOffset.UTC).format(outputFormatter);
+										String out =
+												ld.atStartOfDay(ZoneOffset.UTC).format(outputFormatter);
 										return new StringType(out);
 									}
 									return new StringType(ld.format(outputFormatter));
@@ -1708,7 +1712,8 @@ public class Mapper {
 							}
 
 							if (forceInstant) {
-								return new InstantType(Date.from(ld.atStartOfDay(ZoneOffset.UTC).toInstant()));
+								return new InstantType(Date.from(
+										ld.atStartOfDay(ZoneOffset.UTC).toInstant()));
 							}
 							if (forceTime) {
 								return new TimeType("00:00:00");
@@ -1716,27 +1721,28 @@ public class Mapper {
 
 							if (outputFormatter != null) {
 								if (patternNeedsTime(outputPattern)) {
-									String formatted = ld.atStartOfDay(ZoneOffset.UTC).format(outputFormatter);
+									String formatted =
+											ld.atStartOfDay(ZoneOffset.UTC).format(outputFormatter);
 									return new DateTimeType(formatted);
 								}
 								String formatted = ld.format(outputFormatter);
 								return new DateTimeType(formatted);
 							}
 
-							return new DateType(Date.from(ld.atStartOfDay(ZoneOffset.UTC).toInstant()));
+							return new DateType(
+									Date.from(ld.atStartOfDay(ZoneOffset.UTC).toInstant()));
 						} catch (Exception e2) {
 							try {
 								LocalTime lt = LocalTime.parse(dateSource, inputFormatter);
 
 								if (forceNoFhir) {
-									String out = (outputFormatter != null)
-										? lt.format(outputFormatter)
-										: dateSource;
+									String out = (outputFormatter != null) ? lt.format(outputFormatter) : dateSource;
 									return new StringType(out);
 								}
 								if (forceInstant) {
 									LocalDateTime ldt = lt.atDate(LocalDate.now());
-									return new InstantType(Date.from(ldt.atZone(ZoneOffset.UTC).toInstant()));
+									return new InstantType(
+											Date.from(ldt.atZone(ZoneOffset.UTC).toInstant()));
 								}
 								if (forceTime || outputFormatter == null) {
 									return new TimeType(lt.format(DateTimeFormatter.ISO_LOCAL_TIME));
@@ -1747,13 +1753,17 @@ public class Mapper {
 							} catch (Exception e3) {
 								if (looksLikeDate(dateSource)) {
 									throw new IllegalArgumentException(
-										String.format("Could not parse date '%s' with input format '%s'", dateSource, inputFormat),
-										e2);
+											String.format(
+													"Could not parse date '%s' with input format '%s'",
+													dateSource, inputFormat),
+											e2);
 								}
 
 								throw new IllegalArgumentException(
-									String.format("Could not parse date/time '%s' with input format '%s'", dateSource, inputFormat),
-									e3);
+										String.format(
+												"Could not parse date/time '%s' with input format '%s'",
+												dateSource, inputFormat),
+										e3);
 							}
 						}
 					}
@@ -1801,19 +1811,22 @@ public class Mapper {
 
 		// replace NBSP-like spaces then trim
 		t = t.replace('\u00A0', ' ')
-			.replace('\u2007', ' ')
-			.replace('\u202F', ' ')
-			.trim();
+				.replace('\u2007', ' ')
+				.replace('\u202F', ' ')
+				.trim();
 
 		return t;
 	}
 
 	private static boolean patternNeedsTime(String pattern) {
 		if (pattern == null) return false;
-		return pattern.contains("H") || pattern.contains("h")
-			|| pattern.contains("m") || pattern.contains("s")
-			|| pattern.contains("S") || pattern.contains("n")
-			|| pattern.contains("a"); // am/pm
+		return pattern.contains("H")
+				|| pattern.contains("h")
+				|| pattern.contains("m")
+				|| pattern.contains("s")
+				|| pattern.contains("S")
+				|| pattern.contains("n")
+				|| pattern.contains("a"); // am/pm
 	}
 
 	private String normalizeAppendParam(String value) {
