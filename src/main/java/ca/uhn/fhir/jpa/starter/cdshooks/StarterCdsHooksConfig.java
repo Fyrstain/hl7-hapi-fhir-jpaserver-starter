@@ -26,19 +26,6 @@ import org.springframework.context.annotation.Import;
 @Import({CdsHooksConfig.class, CrCommonConfig.class})
 public class StarterCdsHooksConfig {
 
-	//	@Bean
-	//	CdsPrefetchSvc cdsPrefetchSvc(
-	//		CdsResolutionStrategySvc theCdsResolutionStrategySvc,
-	//		CdsPrefetchDaoSvc theResourcePrefetchDao,
-	//		CdsPrefetchFhirClientSvc theResourcePrefetchFhirClient,
-	//		ICdsHooksDaoAuthorizationSvc theCdsHooksDaoAuthorizationSvc) {
-	//		return new ModuleConfigurationPrefetchSvc(
-	//			theCdsResolutionStrategySvc,
-	//			theResourcePrefetchDao,
-	//			theResourcePrefetchFhirClient,
-	//			theCdsHooksDaoAuthorizationSvc);
-	//	}
-
 	@Bean
 	public ICdsCrDiscoveryServiceRegistry cdsCrDiscoveryServiceRegistry() {
 		CdsCrDiscoveryServiceRegistry registry = new CdsCrDiscoveryServiceRegistry();
