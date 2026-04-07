@@ -1,0 +1,5 @@
+{
+  "resourceType": "MyPatientInput",
+  "id": "custom-patient-1",
+  "family": "Dupont"
+}

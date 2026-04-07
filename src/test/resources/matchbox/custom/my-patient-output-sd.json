@@ -1,0 +1,54 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "my-patient-output",
+  "url": "http://example.org/fhir/StructureDefinition/MyPatientOutput",
+  "version": "1.0.0",
+  "name": "MyPatientOutput",
+  "title": "My Patient Output",
+  "status": "active",
+  "experimental": true,
+  "fhirVersion": "4.0.1",
+  "kind": "logical",
+  "abstract": false,
+  "type": "MyPatientOutput",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Element",
+  "derivation": "specialization",
+  "snapshot": {
+    "element": [
+      {
+        "id": "MyPatientOutput",
+        "path": "MyPatientOutput",
+        "short": "Custom logical output model",
+        "definition": "Custom logical output model",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "id": "MyPatientOutput.id",
+        "path": "MyPatientOutput.id",
+        "short": "Identifier",
+        "definition": "Identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "id": "MyPatientOutput.family",
+        "path": "MyPatientOutput.family",
+        "short": "Family name",
+        "definition": "Family name",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      }
+    ]
+  }
+}

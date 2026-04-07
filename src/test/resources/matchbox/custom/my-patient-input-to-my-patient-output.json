@@ -1,0 +1,81 @@
+{
+  "resourceType": "StructureMap",
+  "id": "my-patient-input-to-my-patient-output",
+  "url": "http://example.org/fhir/StructureMap/my-patient-input-to-my-patient-output",
+  "name": "MyPatientInputToMyPatientOutput",
+  "status": "active",
+  "structure": [
+    {
+      "url": "http://example.org/fhir/StructureDefinition/MyPatientInput",
+      "mode": "source"
+    },
+    {
+      "url": "http://example.org/fhir/StructureDefinition/MyPatientOutput",
+      "mode": "target"
+    }
+  ],
+  "group": [
+    {
+      "name": "MapMyPatientInputToMyPatientOutput",
+      "typeMode": "types",
+      "input": [
+        {
+          "name": "src",
+          "type": "MyPatientInput",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "MyPatientOutput",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "mapId",
+          "source": [
+            {
+              "context": "src",
+              "element": "id",
+              "variable": "srcId"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "id",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "srcId"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "mapFamily",
+          "source": [
+            {
+              "context": "src",
+              "element": "family",
+              "variable": "srcFamily"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "family",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "srcFamily"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

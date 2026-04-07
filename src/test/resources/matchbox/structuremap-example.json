@@ -1,0 +1,59 @@
+{
+  "resourceType": "StructureMap",
+  "id": "simple-patient-map",
+  "url": "http://example.org/fhir/StructureMap/simple-patient-map",
+  "name": "SimplePatientMap",
+  "status": "active",
+  "structure": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/Patient",
+      "mode": "source"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/Patient",
+      "mode": "target"
+    }
+  ],
+  "group": [
+    {
+      "name": "PatientMap",
+      "typeMode": "none",
+      "input": [
+        {
+          "name": "src",
+          "type": "Patient",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "Patient",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "mapId",
+          "source": [
+            {
+              "context": "src",
+              "element": "id",
+              "variable": "id"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "id",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "id"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

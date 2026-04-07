@@ -9,6 +9,7 @@ import org.hl7.fhir.r4.fhirpath.FHIRPathUtilityClasses;
 import org.hl7.fhir.r4.fhirpath.IHostApplicationServices;
 import org.hl7.fhir.r4.fhirpath.TypeDetails;
 import org.hl7.fhir.r4.model.Base;
+import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.ValueSet;
 import org.hl7.fhir.utilities.fhirpath.FHIRPathConstantEvaluationMode;
 
@@ -73,10 +74,11 @@ public class FFHIRPathHostServices implements IHostApplicationServices {
 	}
 
 	@Override
-	public Base resolveReference(FHIRPathEngine fpe, Object appContext, String url, Base base) throws FHIRException {
+	public Base resolveReference(FHIRPathEngine fhirPathEngine, Object o, String s, Identifier identifier, Base base) throws FHIRException {
 		throw new NotImplementedException(
-				"Not done yet (FFHIRPathHostServices.conformsToProfile), when item is element");
+			"Not done yet (FFHIRPathHostServices.conformsToProfile), when item is element");
 	}
+
 
 	@Override
 	public boolean conformsToProfile(FHIRPathEngine fpe, Object appContext, Base item, String url)

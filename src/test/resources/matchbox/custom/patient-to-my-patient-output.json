@@ -1,0 +1,59 @@
+{
+  "resourceType": "StructureMap",
+  "id": "patient-to-my-patient-output",
+  "url": "http://example.org/fhir/StructureMap/patient-to-my-patient-output",
+  "name": "PatientToMyPatientOutput",
+  "status": "active",
+  "structure": [
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/Patient",
+      "mode": "source"
+    },
+    {
+      "url": "http://example.org/fhir/StructureDefinition/MyPatientOutput",
+      "mode": "target"
+    }
+  ],
+  "group": [
+    {
+      "name": "MapPatientToMyPatientOutput",
+      "typeMode": "types",
+      "input": [
+        {
+          "name": "src",
+          "type": "Patient",
+          "mode": "source"
+        },
+        {
+          "name": "tgt",
+          "type": "MyPatientOutput",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "mapId",
+          "source": [
+            {
+              "context": "src",
+              "element": "id",
+              "variable": "srcId"
+            }
+          ],
+          "target": [
+            {
+              "context": "tgt",
+              "element": "id",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "srcId"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
