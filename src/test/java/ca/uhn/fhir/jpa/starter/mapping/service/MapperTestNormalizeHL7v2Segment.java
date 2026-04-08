@@ -10,7 +10,7 @@ class MapperTestNormalizeHL7v2Segment {
 
 	@Test
 	void normalizeSegmentName_shouldPreserveRealDigitSegments() throws Exception {
-		Mapper mapper = new Mapper(null, null, null, null, null);
+		Mapper mapper = new Mapper(null, null, null, null, null, null);
 
 		Method m = Mapper.class.getDeclaredMethod("normalizeSegmentName", String.class);
 		m.setAccessible(true);
@@ -30,7 +30,7 @@ class MapperTestNormalizeHL7v2Segment {
 
 	@Test
 	void normalizeSegmentName_shouldStripDigitsForIndexed3LetterSegments() throws Exception {
-		Mapper mapper = new Mapper(null, null, null, null, null);
+		Mapper mapper = new Mapper(null, null, null, null, null, null);
 
 		Method m = Mapper.class.getDeclaredMethod("normalizeSegmentName", String.class);
 		m.setAccessible(true);

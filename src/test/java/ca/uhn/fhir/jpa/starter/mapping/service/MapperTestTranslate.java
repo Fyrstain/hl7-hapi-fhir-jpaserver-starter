@@ -41,7 +41,7 @@ public class MapperTestTranslate {
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		// Transform parameters
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
@@ -68,7 +68,7 @@ public class MapperTestTranslate {
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		// Transform parameters
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
@@ -103,7 +103,7 @@ public class MapperTestTranslate {
 		when(worker.fetchResource(any(), any())).thenReturn(getConceptMap());
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(worker, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(worker, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		// Transform parameters
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
@@ -145,7 +145,7 @@ public class MapperTestTranslate {
 		when(transformerService.translate(any(), any(), any())).thenReturn(new Coding("https://loinc.org", "2823-3", ""));
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(worker, fhirPathEngine, transformerService, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(worker, fhirPathEngine, transformerService, structureMapDao, clientStructureMap, null);
 
 		// Transform parameters
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();

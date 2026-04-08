@@ -39,7 +39,7 @@ class MapperTestProcessHPRIM {
 		@SuppressWarnings("unchecked")
 		IFhirResourceDao<StructureMap> dao = mock(IFhirResourceDao.class);
 		IGenericClient client = mock(IGenericClient.class);
-		return new Mapper(worker, fhirPathEngine, services, dao, client);
+		return new Mapper(worker, fhirPathEngine, services, dao, client, null);
 	}
 
 	@Test

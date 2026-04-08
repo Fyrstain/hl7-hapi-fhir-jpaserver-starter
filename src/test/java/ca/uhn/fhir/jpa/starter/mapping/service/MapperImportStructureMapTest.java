@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class MapperTestImportStructureMap {
+class MapperImportStructureMapTest {
 
 	private static FhirContext fhirContext;
 	private static String serverBaseUrl;
@@ -51,13 +51,13 @@ class MapperTestImportStructureMap {
 		importedMap.setUrl("http://example.org/imported");
 
 		IGenericClient clientStructureMap = null;
-		mapper = spy(new Mapper(null, null, null, structureMapDao, clientStructureMap));
+		mapper = spy(new Mapper(null, null, null, structureMapDao, clientStructureMap, null));
 	}
 
 	@Test
 	void resolveImports_shouldThrowIfUrlIsNull() {
 		StructureMap map = new StructureMap();
-		assertThrows(InvalidRequestException.class, () -> mapper.resolveImports(map, new HashSet<>()));
+		assertThrows(InvalidRequestException.class, () -> mapper.resolveImports(map, new HashSet<>(), new ArrayList<>()));
 	}
 
 	@Test
@@ -65,7 +65,7 @@ class MapperTestImportStructureMap {
 		Set<String> visited = new HashSet<>();
 		visited.add("http://example.org/base");
 
-		StructureMap result = mapper.resolveImports(baseMap, visited);
+		StructureMap result = mapper.resolveImports(baseMap, visited, new ArrayList<>());
 		assertEquals(baseMap, result);
 	}
 
@@ -80,11 +80,15 @@ class MapperTestImportStructureMap {
 		doReturn(importedMap).when(mapper).fetchStructureMapByUrl("http://example.org/imported");
 		doNothing().when(mapper).mergeStructureMaps(any(), any());
 
-		StructureMap result = mapper.resolveImports(baseMap, new HashSet<>());
+		List<StructureMap> importedMaps = new ArrayList<>();
+
+		StructureMap result = mapper.resolveImports(baseMap, new HashSet<>(), new ArrayList<>());
 
 		verify(mapper).mergeStructureMaps(any(), any());
 		assertNotNull(result);
 		assertEquals("http://example.org/base", result.getUrl());
+		assertEquals(1, importedMaps.size());
+		assertEquals(importedMap, importedMaps.get(0));
 	}
 
 	@Test
@@ -92,7 +96,7 @@ class MapperTestImportStructureMap {
 		baseMap.addImport("http://example.org/missing");
 		doReturn(null).when(mapper).fetchStructureMapByUrl("http://example.org/missing");
 
-		assertThrows(InvalidRequestException.class, () -> mapper.resolveImports(baseMap, new HashSet<>()));
+		assertThrows(InvalidRequestException.class, () -> mapper.resolveImports(baseMap, new HashSet<>(), new ArrayList<>()));
 	}
 
 	@Test
@@ -205,7 +209,7 @@ class MapperTestImportStructureMap {
 		importedGroup.addRule(importedRule1);
 		importedGroup.addRule(importedRule2);
 
-		Mapper mapper = spy(new Mapper(null, null, null, null, null));
+		Mapper mapper = spy(new Mapper(null, null, null, null, null, null));
 		doNothing().when(mapper).mergeRules(any(), any()); // évite la récursion
 
 		// WHEN

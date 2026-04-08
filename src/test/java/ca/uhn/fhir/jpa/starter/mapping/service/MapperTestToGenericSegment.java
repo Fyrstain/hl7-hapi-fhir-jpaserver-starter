@@ -18,7 +18,7 @@ class MapperTestToGenericSegment {
 
 	private IFhirResourceDao<StructureMap> structureMapDao;
 	IGenericClient clientStructureMap = null;
-	private final Mapper mapper = new Mapper(null, null, null, structureMapDao, clientStructureMap);
+	private final Mapper mapper = new Mapper(null, null, null, structureMapDao, clientStructureMap, null);
 
 	private final String siuS12Message =
 		"MSH|^~\\&|TestSystem|TestFacility|ReceiverApp|ReceiverFacility|20251001120000||SIU^S12^SIU_S12|MSG00001|P|2.5.1|||||FRA|UTF-8\r"

@@ -50,7 +50,7 @@ public class MapperTestDateOp {
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
 		param.setName("input");
@@ -117,7 +117,7 @@ public class MapperTestDateOp {
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
 		param.setName("input");

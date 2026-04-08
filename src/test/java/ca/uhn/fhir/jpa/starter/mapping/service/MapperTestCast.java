@@ -47,7 +47,7 @@ public class MapperTestCast {
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
 		param.setName("input");
@@ -111,7 +111,7 @@ public class MapperTestCast {
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		String sourceValue = "987654321";
 		String expectedBase64 = java.util.Base64.getEncoder().encodeToString(sourceValue.getBytes(StandardCharsets.UTF_8));
@@ -143,7 +143,7 @@ public class MapperTestCast {
 		this.hapiContext = new HapiWorkerContext(context, this.validationSupport);
 
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, null);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, null, null);
 
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
 		param.setName("input");

@@ -7,6 +7,7 @@ import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.searchparam.SearchParameterMap;
 import ca.uhn.fhir.jpa.starter.mapping.service.FFHIRPathHostServices;
 import ca.uhn.fhir.jpa.starter.mapping.service.Mapper;
+import ca.uhn.fhir.jpa.starter.mapping.service.MatchboxTransformService;
 import ca.uhn.fhir.jpa.starter.mapping.service.TransformerService;
 import ca.uhn.fhir.jpa.starter.mapping.validation.ExtendedRemoteTerminologyServiceValidationSupport;
 import ca.uhn.fhir.jpa.starter.mapping.validation.PersistedValidationSupportClass;
@@ -33,8 +34,12 @@ public class TransformProvider {
 
 	private PersistedValidationSupportClass validationSupport;
 
-	public TransformProvider(IFhirResourceDao<StructureMap> theStructureMapDao) {
+	private MatchboxTransformService matchboxTransformService;
+
+	public TransformProvider(IFhirResourceDao<StructureMap> theStructureMapDao,
+									 MatchboxTransformService theMatchboxTransformService) {
 		myStructureMapDao = theStructureMapDao;
+		matchboxTransformService = theMatchboxTransformService;
 	}
 
 	@Operation(name = "$transform")
@@ -117,7 +122,9 @@ public class TransformProvider {
 				fhirPathEngine,
 				terminologyUrl != null ? new TransformerService(terminologyUrl) : null,
 				myStructureMapDao,
-				clientStructureMap);
+				clientStructureMap,
+				matchboxTransformService
+			);
 
 		////////////////////////////////////////////////////////////////
 

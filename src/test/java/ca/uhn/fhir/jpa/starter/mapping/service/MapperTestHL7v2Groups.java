@@ -28,7 +28,7 @@ public class MapperTestHL7v2Groups {
 
 	@BeforeEach
 	void setup() {
-		mapper = new Mapper(null, null, null, null, null);
+		mapper = new Mapper(null, null, null, null, null, null);
 	}
 
 	private Object invokePrivate(String methodName, Class<?>[] args, Object... params)

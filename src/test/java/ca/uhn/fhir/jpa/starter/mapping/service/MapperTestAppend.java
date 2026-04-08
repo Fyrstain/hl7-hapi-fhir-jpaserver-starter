@@ -46,7 +46,7 @@ public class MapperTestAppend {
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
 		param.setName("input");
@@ -139,7 +139,7 @@ public class MapperTestAppend {
 
 	@Test
 	void append_shouldConvertNbspToSpace() throws Exception {
-		Mapper mapper = new Mapper(null, null, null, null, null);
+		Mapper mapper = new Mapper(null, null, null, null, null, null);
 
 		StructureMap.StructureMapGroupRuleTargetComponent target =
 			new StructureMap.StructureMapGroupRuleTargetComponent();
@@ -167,7 +167,7 @@ public class MapperTestAppend {
 
 	@Test
 	void processTarget_shouldSupportAppendIntoXhtmlDiv() throws Exception {
-		Mapper mapper = new Mapper(null, null, null, null, null);
+		Mapper mapper = new Mapper(null, null, null, null, null, null);
 
 		Encounter enc = new Encounter();
 

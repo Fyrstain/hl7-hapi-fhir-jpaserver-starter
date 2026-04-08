@@ -36,7 +36,7 @@ public class MapperTestHL7v2Versions {
 		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
 
 		IGenericClient clientStructureMap = null;
-		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap);
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
 
 		String hl7v2Message = String.format(
 			"MSH|^~\\&|HIS|RIH|EKG|EKG|199904140038||ADT^A01||P|%s\r" +
