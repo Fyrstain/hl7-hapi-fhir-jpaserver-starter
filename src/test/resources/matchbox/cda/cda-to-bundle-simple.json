@@ -1,0 +1,107 @@
+{
+  "resourceType": "StructureMap",
+  "id": "cda-to-bundle-simple",
+  "url": "http://example.org/fhir/StructureMap/CdaToBundleSimple",
+  "name": "CdaToBundleSimple",
+  "status": "active",
+  "structure": [
+    {
+      "url": "http://hl7.org/cda/stds/core/StructureDefinition/ClinicalDocument",
+      "mode": "source"
+    },
+    {
+      "url": "http://hl7.org/fhir/StructureDefinition/Bundle",
+      "mode": "target"
+    }
+  ],
+  "group": [
+    {
+      "name": "main",
+      "typeMode": "types",
+      "input": [
+        {
+          "name": "src",
+          "type": "ClinicalDocument",
+          "mode": "source"
+        },
+        {
+          "name": "bundle",
+          "type": "Bundle",
+          "mode": "target"
+        }
+      ],
+      "rule": [
+        {
+          "name": "setBundleType",
+          "source": [
+            {
+              "context": "src"
+            }
+          ],
+          "target": [
+            {
+              "context": "bundle",
+              "element": "type",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueCode": "collection"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "mapId",
+          "source": [
+            {
+              "context": "src",
+              "element": "id",
+              "variable": "srcId"
+            }
+          ],
+          "target": [
+            {
+              "context": "bundle",
+              "element": "id",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "srcId"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "mapTitleToIdentifier",
+          "source": [
+            {
+              "context": "src",
+              "element": "title",
+              "variable": "srcTitle"
+            }
+          ],
+          "target": [
+            {
+              "context": "bundle",
+              "element": "identifier",
+              "transform": "create",
+              "variable": "tgtIdentifier"
+            },
+            {
+              "context": "tgtIdentifier",
+              "element": "value",
+              "transform": "copy",
+              "parameter": [
+                {
+                  "valueId": "srcTitle"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

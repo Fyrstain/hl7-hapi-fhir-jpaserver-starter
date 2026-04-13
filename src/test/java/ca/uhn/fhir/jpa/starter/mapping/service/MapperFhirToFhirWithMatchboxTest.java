@@ -86,7 +86,8 @@ class MapperFhirToFhirWithMatchboxTest {
             any(StructureMap.class),
             anyList(),
             isNull(),
-            eq(inputJson)
+            eq(inputJson),
+			  	eq(true)
         )).thenReturn(outputJson);
 
         Parameters parameters = buildInputParameters("source", "application/fhir+json", inputJson);
@@ -116,7 +117,8 @@ class MapperFhirToFhirWithMatchboxTest {
             any(StructureMap.class),
             anyList(),
             isNull(),
-            eq(inputJson)
+            eq(inputJson),
+			   eq(true)
         );
     }
 
@@ -136,7 +138,8 @@ class MapperFhirToFhirWithMatchboxTest {
             any(StructureMap.class),
             anyList(),
             isNull(),
-            eq(inputJson)
+            eq(inputJson),
+			  eq(true)
         )).thenThrow(new RuntimeException("boom"));
 
         Parameters parameters = buildInputParameters("source", "application/fhir+json", inputJson);

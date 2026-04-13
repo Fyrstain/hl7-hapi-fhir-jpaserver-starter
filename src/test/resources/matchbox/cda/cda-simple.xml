@@ -1,0 +1,4 @@
+<ClinicalDocument xmlns="urn:hl7-org:v3">
+    <id root="cda-12345"/>
+    <title>Test CDA Document</title>
+</ClinicalDocument>

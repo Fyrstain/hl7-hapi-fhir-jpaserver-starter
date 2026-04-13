@@ -2,6 +2,7 @@ package ca.uhn.fhir.jpa.starter.mapping.service;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.starter.mapping.model.exception.MatchboxTransformException;
+import ch.ahdis.matchbox.engine.CdaMappingEngine;
 import ch.ahdis.matchbox.engine.MatchboxEngine;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
@@ -24,9 +26,9 @@ class MatchboxTransformServiceTest {
     private MatchboxTransformService service;
 
     @BeforeEach
-    void setUp() {
-        fhirContext = FhirContext.forR4Cached();
-        service = new MatchboxTransformService(fhirContext, new MatchboxEngine.MatchboxEngineBuilder().getEngineR4());
+    void setUp() throws IOException, URISyntaxException {
+		 fhirContext = FhirContext.forR4Cached();
+		 service = new MatchboxTransformService(fhirContext, new CdaMappingEngine.CdaMappingEngineBuilder().getCdaEngineR4());
     }
 
     @Test
@@ -34,7 +36,7 @@ class MatchboxTransformServiceTest {
         StructureMap structureMap = loadStructureMap("/matchbox/structuremap-example.json");
         String sourceJson = loadText("/matchbox/source-example.json");
 
-        Resource result = new org.hl7.fhir.r4.formats.XmlParser()
+        Resource result = new org.hl7.fhir.r4.formats.JsonParser()
 			  .parse(service.transform(structureMap, sourceJson));
 
         assertNotNull(result);
@@ -61,8 +63,8 @@ class MatchboxTransformServiceTest {
 		StructureMap structureMapCommon = loadStructureMap("/matchbox/simple-patient-common.json");
 		String sourceJson = loadText("/matchbox/source-example.json");
 
-		Resource result = new org.hl7.fhir.r4.formats.XmlParser()
-			.parse(service.transform(structureMap, List.of(structureMapCommon), null, sourceJson));
+		Resource result = new org.hl7.fhir.r4.formats.JsonParser()
+			.parse(service.transform(structureMap, List.of(structureMapCommon), null, sourceJson, true));
 
 		assertNotNull(result);
 		assertNotNull(result.fhirType());
@@ -137,7 +139,8 @@ class MatchboxTransformServiceTest {
 			structureMap,
 			null,
 			List.of(customSourceModel),
-			sourceJson
+			sourceJson,
+			false
 		));
 
 		assertNotNull(result);
@@ -162,7 +165,8 @@ class MatchboxTransformServiceTest {
 			structureMap,
 			null,
 			List.of(customTargetModel),
-			sourceJson
+			sourceJson,
+			false
 		);
 
 		assertNotNull(result);
@@ -191,7 +195,8 @@ class MatchboxTransformServiceTest {
 			structureMap,
 			null,
 			List.of(customSourceModel, customTargetModel),
-			sourceJson
+			sourceJson,
+			false
 		);
 
 		assertNotNull(result);
@@ -201,6 +206,28 @@ class MatchboxTransformServiceTest {
 			"  <id value=\"custom-patient-1\"/>\n" +
 			"  <family value=\"Dupont\"/>\n" +
 			"</MyPatientOutput>", result);
+	}
+
+	@Test
+	void transform_cdaToBundle_simple() {
+
+		StructureMap structureMap =
+			loadStructureMap("/matchbox/cda/cda-to-bundle-simple.json");
+
+		String cdaXml =
+			loadText("/matchbox/cda/cda-simple.xml");
+
+		String result = service.transform(structureMap, cdaXml);
+
+		assertNotNull(result);
+		assertFalse(result.isBlank());
+
+		System.out.println(result);
+
+		// assertions simples
+		assertTrue(result.contains("Bundle"));
+		assertTrue(result.contains("cda-12345"));
+		assertTrue(result.contains("Test CDA Document"));
 	}
 
 	private StructureDefinition loadStructureDefinition(String path) {

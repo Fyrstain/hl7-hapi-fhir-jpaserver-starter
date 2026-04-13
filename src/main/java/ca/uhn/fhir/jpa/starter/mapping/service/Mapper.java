@@ -125,7 +125,9 @@ public class Mapper {
 		Parameters result = new Parameters();
 
 		for (StructureMap.StructureMapGroupComponent group : resolved.getGroup()) {
-			if (isFhirToFhir(group)) {
+			boolean isCDAToFhir = isCDAToFhir(group);
+			boolean isFhirToCda = isFhirToCda(group);
+			if (isCDAToFhir || isFhirToCda || isFhirToFhir(group)) {
 				//TODO update how input are parsed
 				//TODO See for multiple inputs ?
 				String inputContent = group.getInput().stream()
@@ -145,7 +147,8 @@ public class Mapper {
 					resolved,
 					importedMaps,
 					null,
-					inputContent
+					inputContent,
+					!isFhirToCda
 				);
 
 				//TODO See for multiple outputs ?
@@ -265,6 +268,56 @@ public class Mapper {
             case "CSV", "JSON", "HL7v2", "HPRIM", "XML" -> false;
             default -> true;
         };
+	}
+
+	private boolean isCDAToFhir(StructureMap.StructureMapGroupComponent group) {
+		//For now, only return true if transform has exactly one input and one output
+		List<StructureMap.StructureMapGroupInputComponent> inputs = group.getInput().stream()
+			.filter(i -> StructureMap.StructureMapInputMode.SOURCE.equals(i.getMode()))
+			.toList();
+		List<StructureMap.StructureMapGroupInputComponent> outputs = group.getInput().stream()
+			.filter(i -> StructureMap.StructureMapInputMode.TARGET.equals(i.getMode()))
+			.toList();
+
+		if (inputs.size() != 1 || outputs.size() != 1) {
+			return false;
+		}
+
+		String inputType = inputs.stream()
+			.map(StructureMap.StructureMapGroupInputComponent::getType)
+			.findFirst().orElse("");
+
+
+		String outputType = outputs.stream()
+			.map(StructureMap.StructureMapGroupInputComponent::getType)
+			.findFirst().orElse("");
+
+		return inputType.equals("ClinicalDocument");
+    }
+
+	private boolean isFhirToCda(StructureMap.StructureMapGroupComponent group) {
+		//For now, only return true if transform has exactly one input and one output
+		List<StructureMap.StructureMapGroupInputComponent> inputs = group.getInput().stream()
+			.filter(i -> StructureMap.StructureMapInputMode.SOURCE.equals(i.getMode()))
+			.toList();
+		List<StructureMap.StructureMapGroupInputComponent> outputs = group.getInput().stream()
+			.filter(i -> StructureMap.StructureMapInputMode.TARGET.equals(i.getMode()))
+			.toList();
+
+		if (inputs.size() != 1 || outputs.size() != 1) {
+			return false;
+		}
+
+		String inputType = inputs.stream()
+			.map(StructureMap.StructureMapGroupInputComponent::getType)
+			.findFirst().orElse("");
+
+
+		String outputType = outputs.stream()
+			.map(StructureMap.StructureMapGroupInputComponent::getType)
+			.findFirst().orElse("");
+
+		return outputType.equals("ClinicalDocument");
 	}
 
 	private Object createEmptyOutput(String type) {
