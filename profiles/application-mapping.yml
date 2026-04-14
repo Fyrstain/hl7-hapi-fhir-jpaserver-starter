@@ -2,3 +2,8 @@ hapi:
   fhir:
     mapping:
       enabled: true
+      # Environment variables will be automatically injected here:
+      # FHIR_TERMINOLOGY_ENDPOINT → hapi.fhir.mapping.terminology-endpoint
+      # FHIR_STRUCTUREMAP_ENDPOINT → hapi.fhir.mapping.structure-map-endpoint
+      terminology-endpoint: ${FHIR_TERMINOLOGY_ENDPOINT:}
+      structure-map-endpoint: ${FHIR_STRUCTUREMAP_ENDPOINT:}

@@ -12,7 +12,11 @@ import org.springframework.context.annotation.Configuration;
 public class MappingConfig {
 
 	@Bean
-	public TransformProvider ipsOperationProvider(IFhirResourceDao<StructureMap> structureMapDao) {
-		return new TransformProvider(structureMapDao);
+	public TransformProvider ipsOperationProvider(
+			IFhirResourceDao<StructureMap> structureMapDao, MappingProperties mappingProperties) {
+		return new TransformProvider(
+				structureMapDao,
+				mappingProperties.getTerminologyEndpoint(),
+				mappingProperties.getStructureMapEndpoint());
 	}
 }

@@ -10,6 +10,8 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
       SPRING_CONFIG_ADDITIONAL_LOCATION: "/profiles/"
       SPRING_PROFILES_ACTIVE: "mapping"
+      FHIR_STRUCTUREMAP_ENDPOINT: http://knowledge-repo:8080/fhir
+      FHIR_TERMINOLOGY_ENDPOINT: http://fhir-server:8080/fhir
     volumes:
       - ./profiles:/profiles
     ports:
