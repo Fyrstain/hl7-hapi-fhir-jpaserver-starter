@@ -124,46 +124,48 @@ public class Mapper {
 
 		Parameters result = new Parameters();
 
-		for (StructureMap.StructureMapGroupComponent group : resolved.getGroup()) {
-			boolean isCDAToFhir = isCDAToFhir(group);
-			boolean isFhirToCda = isFhirToCda(group);
-			if (isCDAToFhir || isFhirToCda || isFhirToFhir(group)) {
-				//TODO update how input are parsed
-				//TODO See for multiple inputs ?
-				String inputContent = group.getInput().stream()
-					.filter(i -> StructureMap.StructureMapInputMode.SOURCE.equals(i.getMode()))
-					.map(StructureMap.StructureMapGroupInputComponent::getName)
-					.map(name -> {
-						Binary parameter = (Binary) parameters.getParameter("input").getPart().stream()
-							.filter(p -> name.equals(p.getName()))
-							.findFirst()
-							.map(Parameters.ParametersParameterComponent::getResource)
-							.orElse(null);
-						return new String(Base64.getDecoder().decode(parameter.getContentAsBase64()), StandardCharsets.UTF_8);
-					})
-					.findFirst().orElse("");
+		StructureMap.StructureMapGroupComponent firstGroup = structureMap.getGroup().getFirst();
 
-				String outputContent = matchboxTransformService.transform(
-					resolved,
-					importedMaps,
-					null,
-					inputContent,
-					!isFhirToCda
-				);
+		boolean isCDAToFhir = isCDAToFhir(firstGroup);
+		boolean isFhirToCda = isFhirToCda(firstGroup);
+		if (isCDAToFhir || isFhirToCda || isFhirToFhir(firstGroup)) {
+			//TODO update how input are parsed
+			//TODO See for multiple inputs ?
+			String inputContent = firstGroup.getInput().stream()
+				.filter(i -> StructureMap.StructureMapInputMode.SOURCE.equals(i.getMode()))
+				.map(StructureMap.StructureMapGroupInputComponent::getName)
+				.map(name -> {
+					Binary parameter = (Binary) parameters.getParameter("input").getPart().stream()
+						.filter(p -> name.equals(p.getName()))
+						.findFirst()
+						.map(Parameters.ParametersParameterComponent::getResource)
+						.orElse(null);
+					return new String(Base64.getDecoder().decode(parameter.getContentAsBase64()), StandardCharsets.UTF_8);
+				})
+				.findFirst().orElse("");
 
-				//TODO See for multiple outputs ?
-				String outputName = group.getInput().stream()
-					.filter(i -> StructureMap.StructureMapInputMode.TARGET.equals(i.getMode()))
-					.map(StructureMap.StructureMapGroupInputComponent::getName)
-					.findFirst().orElse("");
+			String outputContent = matchboxTransformService.transform(
+				resolved,
+				importedMaps,
+				null,
+				inputContent,
+				!isFhirToCda
+			);
 
-				result.addParameter(new Parameters.ParametersParameterComponent()
-					.setName(outputName)
-					.setResource(new Binary()
-						.setContentType(getContentType("application/fhir+json"))
-						.setContentAsBase64(
-							Base64.getEncoder().encodeToString(outputContent.getBytes(StandardCharsets.UTF_8)))));
-			} else {
+			//TODO See for multiple outputs ?
+			String outputName = firstGroup.getInput().stream()
+				.filter(i -> StructureMap.StructureMapInputMode.TARGET.equals(i.getMode()))
+				.map(StructureMap.StructureMapGroupInputComponent::getName)
+				.findFirst().orElse("");
+
+			result.addParameter(new Parameters.ParametersParameterComponent()
+				.setName(outputName)
+				.setResource(new Binary()
+					.setContentType(getContentType("application/fhir+json"))
+					.setContentAsBase64(
+						Base64.getEncoder().encodeToString(outputContent.getBytes(StandardCharsets.UTF_8)))));
+		} else {
+			for (StructureMap.StructureMapGroupComponent group : resolved.getGroup()) {
 				Variables variables = new Variables();
 
 				for (StructureMap.StructureMapGroupInputComponent input : group.getInput()) {
@@ -209,6 +211,7 @@ public class Mapper {
 				});
 			}
 		}
+
 		return result;
 	}
 
