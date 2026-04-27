@@ -95,6 +95,7 @@ public class Mapper {
 	private final IFhirResourceDao<StructureMap> structureMapDao;
 	private final IGenericClient clientStructureMap;
 	private final MatchboxTransformService matchboxTransformService;
+	private final StructureMapResolver structureMapResolver;
 
 	public Mapper(
 			IWorkerContext worker,
@@ -109,6 +110,7 @@ public class Mapper {
 		this.structureMapDao = structureMapDao;
 		this.clientStructureMap = clientStructureMap;
 		this.matchboxTransformService = matchboxTransformService;
+		this.structureMapResolver = new StructureMapResolver(clientStructureMap, structureMapDao);
 	}
 
 	public Parameters map(StructureMap structureMap, Parameters parameters) {
@@ -145,7 +147,7 @@ public class Mapper {
 				.findFirst().orElse("");
 
 			String outputContent = matchboxTransformService.transform(
-				resolved,
+				structureMap,
 				importedMaps,
 				null,
 				inputContent,
@@ -2752,17 +2754,28 @@ public class Mapper {
 
 		for (UriType importUrl : original.getImport()) {
 			String importCanonical = importUrl.getValue();
-			StructureMap importedMap = fetchStructureMapByUrl(importCanonical);
 
-			if (importedMap == null) {
+			if (visited.contains(importCanonical)) {
+				continue;
+			} else if (structureMapResolver.containsWildcard(importCanonical)) {
+				visited.add(importCanonical);
+			}
+			List<StructureMap> fetchedMaps = structureMapResolver.fetchStructureMapByUrl(importCanonical);
+
+			if (fetchedMaps == null) {
 				throw new InvalidRequestException("Unable to find imported StructureMap: " + importCanonical);
 			}
 
-			importedMaps.add(importedMap);
+			for (StructureMap fetchedMap : fetchedMaps) {
+				if (!fetchedMap.getUrl().equals(original.getUrl()) && !visited.contains(fetchedMap.getUrl())) {
+					importedMaps.add(fetchedMap);
 
-			importedMap = resolveImports(importedMap, visited, importedMaps);
+					fetchedMap = resolveImports(fetchedMap, visited, importedMaps);
 
-			mergeStructureMaps(resolvedMap, importedMap);
+					visited.add(fetchedMap.getUrl());
+					mergeStructureMaps(resolvedMap, fetchedMap);
+				}
+			}
 		}
 		return resolvedMap;
 	}
