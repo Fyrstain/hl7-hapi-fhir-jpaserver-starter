@@ -167,7 +167,10 @@ public class Mapper {
 					.setContentAsBase64(
 						Base64.getEncoder().encodeToString(outputContent.getBytes(StandardCharsets.UTF_8)))));
 		} else {
-			for (StructureMap.StructureMapGroupComponent group : resolved.getGroup()) {
+			List<StructureMap.StructureMapGroupComponent> groups = resolved.getGroup().stream()
+				.filter(g -> structureMap.getGroup().stream().anyMatch(g2 -> g.getName().equals(g2.getName())))
+				.toList();
+			for (StructureMap.StructureMapGroupComponent group : groups) {
 				Variables variables = new Variables();
 
 				for (StructureMap.StructureMapGroupInputComponent input : group.getInput()) {
@@ -506,11 +509,26 @@ public class Mapper {
 		String sourceContext = context.getSources().get(0).getContext();
 
 		String type = context.getGroup().getInput().stream()
-				.filter(input -> sourceContext.equals(input.getName()))
-				.map(StructureMap.StructureMapGroupInputComponent::getType)
-				.findFirst()
-				.orElse(context.getGroup().getInput().get(0).getType());
-		// .orElse("Resource");
+			.filter(input -> sourceContext.equals(input.getName()))
+			.map(StructureMap.StructureMapGroupInputComponent::getType)
+			.findFirst().orElseGet(() -> {
+				Object source = localVariables.get(INPUT, sourceContext);
+				if (source == null) {
+					source = localVariables.get(OUTPUT, sourceContext);
+				}
+
+				if (source instanceof Structure) {
+					return "HL7v2";
+				} else if (source instanceof CSVRecords || source instanceof CSVRecord) {
+					return "CSV";
+				} else if (source instanceof HPRIMMessage || source instanceof HPRIMSegment) {
+					return "HPRIM";
+				} else if (source instanceof JSONObject) {
+					return "JSON"; //XML Works the same
+				} else {
+					return "DEFAULT";
+				}
+			});
 
 		switch (type) {
 			case "CSV":
@@ -1898,8 +1916,15 @@ public class Mapper {
 									context.getTarget().toString())
 							: null;
 
-					dateSource = normalize(dateSource);
+					String normalizedDateSource = normalize(dateSource);
 					inputFormat = normalize(inputFormat);
+
+					if (inputFormat.length() > normalizedDateSource.length()) {
+						logger.warn(String.format("Date format [%s] longer then actual date [%s], will try to complete string",
+							inputFormat, normalizedDateSource));
+						normalizedDateSource = normalizedDateSource + "0".repeat(inputFormat.length() - normalizedDateSource.length());
+					}
+
 					param2 = normalize(param2);
 					param3 = normalize(param3);
 
@@ -1926,12 +1951,12 @@ public class Mapper {
 							(outputPattern != null) ? DateTimeFormatter.ofPattern(outputPattern) : null;
 
 					try {
-						LocalDateTime ldt = LocalDateTime.parse(dateSource, inputFormatter);
+						LocalDateTime ldt = LocalDateTime.parse(normalizedDateSource, inputFormatter);
 
 						if (forceNoFhir) {
 							String out = (outputFormatter != null)
 									? ldt.atZone(ZoneOffset.UTC).format(outputFormatter)
-									: dateSource;
+									: normalizedDateSource;
 							return new StringType(out);
 						}
 						if (forceInstant) {
@@ -1951,7 +1976,7 @@ public class Mapper {
 
 					} catch (Exception e1) {
 						try {
-							LocalDate ld = LocalDate.parse(dateSource, inputFormatter);
+							LocalDate ld = LocalDate.parse(normalizedDateSource, inputFormatter);
 
 							if (forceNoFhir) {
 								if (outputFormatter != null) {
@@ -1962,7 +1987,7 @@ public class Mapper {
 									}
 									return new StringType(ld.format(outputFormatter));
 								}
-								return new StringType(dateSource);
+								return new StringType(normalizedDateSource);
 							}
 
 							if (forceInstant) {
@@ -1987,10 +2012,10 @@ public class Mapper {
 									Date.from(ld.atStartOfDay(ZoneOffset.UTC).toInstant()));
 						} catch (Exception e2) {
 							try {
-								LocalTime lt = LocalTime.parse(dateSource, inputFormatter);
+								LocalTime lt = LocalTime.parse(normalizedDateSource, inputFormatter);
 
 								if (forceNoFhir) {
-									String out = (outputFormatter != null) ? lt.format(outputFormatter) : dateSource;
+									String out = (outputFormatter != null) ? lt.format(outputFormatter) : normalizedDateSource;
 									return new StringType(out);
 								}
 								if (forceInstant) {
@@ -2005,7 +2030,7 @@ public class Mapper {
 								return new TimeType(formatted);
 
 							} catch (Exception e3) {
-								if (looksLikeDate(dateSource)) {
+								if (looksLikeDate(normalizedDateSource)) {
 									throw new IllegalArgumentException(
 											String.format(
 													"Could not parse date '%s' with input format '%s'",
@@ -2836,9 +2861,9 @@ public class Mapper {
 			StringType rdp = dependent.getVariable().get(i);
 			String var = rdp.asStringValue();
 			Variable.VariableMode mode = input.getMode() == StructureMap.StructureMapInputMode.SOURCE ? INPUT : OUTPUT;
-			Base vv = (Base) context.getVariables().get(mode, var);
+			Object vv = context.getVariables().get(mode, var);
 			if (vv == null && mode == INPUT) {
-				vv = (Base) context.getVariables().get(OUTPUT, var);
+				vv = context.getVariables().get(OUTPUT, var);
 			}
 			if (vv == null) {
 				throw new FHIRException(String.format(
