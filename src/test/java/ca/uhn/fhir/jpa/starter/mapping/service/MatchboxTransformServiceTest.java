@@ -118,10 +118,10 @@ class MatchboxTransformServiceTest {
 
         NullPointerException ex = assertThrows(
             NullPointerException.class,
-            () -> service.transform(structureMap, (String) null)
+            () -> service.transform(structureMap, null)
         );
 
-        assertTrue(ex.getMessage().contains("sourceJson"));
+        assertTrue(ex.getMessage().contains("sourceString"));
     }
 
 	@Test

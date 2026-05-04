@@ -6,10 +6,13 @@ import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IPrimitiveType;
 import org.hl7.fhir.r4.context.IWorkerContext;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.StructureMap;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,10 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -77,12 +77,41 @@ class MapperImportStructureMapTest {
 		importedGroup.setName("ImportedGroup");
 		importedMap.getGroup().add(importedGroup);
 
-		doReturn(importedMap).when(mapper).fetchStructureMapByUrl("http://example.org/imported");
+		IBundleProvider importSearchResult = new IBundleProvider() {
+			@Override
+			public IPrimitiveType<Date> getPublished() {
+				return null;
+			}
+
+			@Nullable
+			@Override
+			public String getUuid() {
+				return "ABCD";
+			}
+
+			@Override
+			public Integer preferredPageSize() {
+				return 1;
+			}
+
+			@Nullable
+			@Override
+			public Integer size() {
+				return 1;
+			}
+
+			@Override
+			public List<IBaseResource> getResources(int theFromIndex, int theToIndex) {
+				return List.of(importedMap);
+			}
+		};
+
+		doReturn(importSearchResult).when(structureMapDao).search(any());
 		doNothing().when(mapper).mergeStructureMaps(any(), any());
 
 		List<StructureMap> importedMaps = new ArrayList<>();
 
-		StructureMap result = mapper.resolveImports(baseMap, new HashSet<>(), new ArrayList<>());
+		StructureMap result = mapper.resolveImports(baseMap, new HashSet<>(), importedMaps);
 
 		verify(mapper).mergeStructureMaps(any(), any());
 		assertNotNull(result);
@@ -94,7 +123,6 @@ class MapperImportStructureMapTest {
 	@Test
 	void resolveImports_shouldThrowIfImportNotFound() {
 		baseMap.addImport("http://example.org/missing");
-		doReturn(null).when(mapper).fetchStructureMapByUrl("http://example.org/missing");
 
 		assertThrows(InvalidRequestException.class, () -> mapper.resolveImports(baseMap, new HashSet<>(), new ArrayList<>()));
 	}

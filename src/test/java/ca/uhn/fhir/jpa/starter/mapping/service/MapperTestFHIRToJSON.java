@@ -67,7 +67,7 @@ class MapperTestFHIRToJSON {
         StructureMap structureMap = new StructureMap();
 		 structureMap.setUrl("http://example.org/base");
 
-        StructureMap.StructureMapGroupComponent group = structureMap.addGroup();
+        StructureMap.StructureMapGroupComponent group = structureMap.addGroup().setName("main");
         group.addInput().setName("source").setType("Patient").setMode(StructureMap.StructureMapInputMode.SOURCE);
         group.addInput().setName("target").setType("JSON").setMode(StructureMap.StructureMapInputMode.TARGET);
 

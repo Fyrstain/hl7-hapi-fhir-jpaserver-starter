@@ -25,11 +25,11 @@ public class MatchboxTransformService {
 	 * Transform a resource using a StructureMap.
 	 *
 	 * @param structureMap StructureMap for the transform
-	 * @param sourceJson   source to transform
+	 * @param sourceString   source to transform
 	 * @return transformed resource
 	 */
-	public String transform(StructureMap structureMap, String sourceJson) {
-		return transform(structureMap, null, null, sourceJson, true);
+	public String transform(StructureMap structureMap, String sourceString) {
+		return transform(structureMap, null, null, sourceString, true);
 	}
 
 	/**

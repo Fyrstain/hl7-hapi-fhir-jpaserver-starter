@@ -73,7 +73,7 @@ class MapperTestXMLToFHIR {
         StructureMap structureMap = new StructureMap();
 		  structureMap.setUrl("http://example.org/base");
 
-        StructureMap.StructureMapGroupComponent group = structureMap.addGroup();
+        StructureMap.StructureMapGroupComponent group = structureMap.addGroup().setName("main");
         group.addInput().setName("source").setType("XML").setMode(StructureMap.StructureMapInputMode.SOURCE);
         group.addInput().setName("target").setType("Questionnaire").setMode(StructureMap.StructureMapInputMode.TARGET);
 
