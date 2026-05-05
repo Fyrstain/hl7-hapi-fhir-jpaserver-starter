@@ -1,0 +1,23 @@
+services:
+  cohorting:
+    image: docker.registry.fyrstain.com/cal/cohorting-datamart-engines:latest
+    container_name: cohorting
+    restart: on-failure
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: "/profiles/"
+      SPRING_PROFILES_ACTIVE: "cohort-r5"
+    volumes:
+      - ./profiles:/profiles
+    ports:
+      - "8090:8080"
+  datamart:
+    image: docker.registry.fyrstain.com/cal/cohorting-datamart-engines:latest
+    container_name: datamart
+    restart: on-failure
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: "/profiles/"
+      SPRING_PROFILES_ACTIVE: "datamart-r5"
+    volumes:
+      - ./profiles:/profiles
+    ports:
+      - "8091:8080"

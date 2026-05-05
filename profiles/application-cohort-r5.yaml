@@ -1,0 +1,5 @@
+hapi:
+  fhir:
+    fhir_version: R5
+    cohort:
+      enabled: true

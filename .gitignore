@@ -124,6 +124,7 @@ local.properties
 .factorypath
 .project
 .settings
+.springBeans
 .sts4-cache
 
 # Code Recommenders
