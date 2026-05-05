@@ -52,6 +52,9 @@ import ca.uhn.fhir.jpa.starter.annotations.OnImplementationGuidesPresent;
 import ca.uhn.fhir.jpa.starter.common.validation.IRepositoryValidationInterceptorFactory;
 import ca.uhn.fhir.jpa.starter.ig.ExtendedPackageInstallationSpec;
 import ca.uhn.fhir.jpa.starter.ig.IImplementationGuideOperationProvider;
+import ca.uhn.fhir.jpa.starter.questionnaire.provider.IExtractProvider;
+import ca.uhn.fhir.jpa.starter.questionnaire.provider.IPopulateProvider;
+import ca.uhn.fhir.jpa.starter.util.EnvironmentHelper;
 import ca.uhn.fhir.jpa.subscription.util.SubscriptionDebugLogInterceptor;
 import ca.uhn.fhir.jpa.util.ResourceCountCache;
 import ca.uhn.fhir.mdm.provider.MdmProviderLoader;
@@ -333,6 +336,8 @@ public class StarterJpaConfig {
 			ThreadSafeResourceDeleterSvc theThreadSafeResourceDeleterSvc,
 			ApplicationContext appContext,
 			Optional<IpsOperationProvider> theIpsOperationProvider,
+			Optional<IExtractProvider> theExtractProvider,
+			Optional<IPopulateProvider> thePopulateProvider,
 			Optional<IImplementationGuideOperationProvider> implementationGuideOperationProvider,
 			DiffProvider diffProvider) {
 		RestfulServer fhirServer = new RestfulServer(fhirSystemDao.getContext());
@@ -512,6 +517,13 @@ public class StarterJpaConfig {
 		// register the IPS Provider
 		theIpsOperationProvider.ifPresent(fhirServer::registerProvider);
 
+		// register the Questionnaire Populate/Extract Providers
+		if (!theExtractProvider.isEmpty()) {
+			fhirServer.registerProvider(theExtractProvider.get());
+		}
+		if (!thePopulateProvider.isEmpty()) {
+			fhirServer.registerProvider(thePopulateProvider.get());
+		}
 		if (appProperties.getUserRequestRetryVersionConflictsInterceptorEnabled()) {
 			fhirServer.registerInterceptor(new UserRequestRetryVersionConflictsInterceptor());
 		}
