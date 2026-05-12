@@ -2993,8 +2993,12 @@ public class Mapper {
 		visited.add(original.getUrl());
 
 		StructureMap resolvedMap = original.copy();
+		List<StructureMap> resolvedImports = new ArrayList<>();
 
-		for (UriType importUrl : original.getImport()) {
+		List<CanonicalType> imports = original.getImport();
+		// Resolve from the end to the beginning.
+		for (int i = imports.size() - 1; i >= 0; i--) {
+			CanonicalType importUrl = imports.get(i);
 			String importCanonical = importUrl.getValue();
 
 			if (visited.contains(importCanonical)) {
@@ -3002,6 +3006,7 @@ public class Mapper {
 			} else if (structureMapResolver.containsWildcard(importCanonical)) {
 				visited.add(importCanonical);
 			}
+
 			List<StructureMap> fetchedMaps = structureMapResolver.fetchStructureMapByUrl(importCanonical);
 
 			if (fetchedMaps == null) {
@@ -3009,16 +3014,28 @@ public class Mapper {
 			}
 
 			for (StructureMap fetchedMap : fetchedMaps) {
-				if (!fetchedMap.getUrl().equals(original.getUrl()) && !visited.contains(fetchedMap.getUrl())) {
-					importedMaps.add(fetchedMap);
-
-					fetchedMap = resolveImports(fetchedMap, visited, importedMaps);
-
-					visited.add(fetchedMap.getUrl());
-					mergeStructureMaps(resolvedMap, fetchedMap);
+				if (fetchedMap.getUrl().equals(original.getUrl()) || visited.contains(fetchedMap.getUrl())) {
+					continue;
 				}
+				importedMaps.add(fetchedMap);
+
+				StructureMap resolvedImport = resolveImports(fetchedMap, visited, importedMaps);
+
+				visited.add(resolvedImport.getUrl());
+
+				// Do not merge now.
+				// Store it for a second pass.
+				resolvedImports.add(resolvedImport);
 			}
 		}
+
+		// Merge back in original declaration order.
+		Collections.reverse(resolvedImports);
+
+		for (StructureMap resolvedImport : resolvedImports) {
+			MapMerger.mergeStructureMaps(resolvedMap, resolvedImport);
+		}
+
 		return resolvedMap;
 	}
 
@@ -3077,131 +3094,5 @@ public class Mapper {
 			structureMap = (StructureMap) resources.get(0);
 		}
 		return structureMap;
-	}
-
-	/**
-	 * Merges imported StructureMap into the base one.
-	 * Local definitions override imported ones.
-	 */
-	void mergeStructureMaps(StructureMap base, StructureMap imported) {
-		mergeVariables(base.getContained(), imported.getContained());
-
-		for (StructureMap.StructureMapGroupComponent importedGroup : imported.getGroup()) {
-			Optional<StructureMap.StructureMapGroupComponent> existingGroupOpt = base.getGroup().stream()
-					.filter(g -> g.getName().equals(importedGroup.getName()) && sameGroupSignature(g, importedGroup))
-					.findFirst();
-
-			if (existingGroupOpt.isPresent()) {
-				mergeGroups(existingGroupOpt.get(), importedGroup);
-			} else {
-				base.getGroup().add(0, importedGroup.copy());
-			}
-		}
-
-		if (!base.hasDescription() && imported.hasDescription()) {
-			base.setDescription(imported.getDescription());
-		}
-	}
-
-	/**
-	 * Compares groups by name and input/output types (signature)
-	 */
-	boolean sameGroupSignature(StructureMap.StructureMapGroupComponent g1, StructureMap.StructureMapGroupComponent g2) {
-		if (!g1.getName().equals(g2.getName())) return false;
-		if (g1.getInput().size() != g2.getInput().size()) return false;
-		for (int i = 0; i < g1.getInput().size(); i++) {
-			if (!Objects.equals(
-					g1.getInput().get(i).getType(), g2.getInput().get(i).getType())) return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Merges rules of two groups.
-	 * Local rules override imported rules with the same name.
-	 * Keeps the order (imported first, local after).
-	 */
-	private void mergeGroups(
-			StructureMap.StructureMapGroupComponent baseGroup, StructureMap.StructureMapGroupComponent importedGroup) {
-		for (StructureMap.StructureMapGroupRuleComponent importedRule : importedGroup.getRule()) {
-			Optional<StructureMap.StructureMapGroupRuleComponent> existingRuleOpt = baseGroup.getRule().stream()
-					.filter(r -> r.getName().equals(importedRule.getName()))
-					.findFirst();
-
-			if (existingRuleOpt.isPresent()) {
-				StructureMap.StructureMapGroupRuleComponent existingRule = existingRuleOpt.get();
-				mergeRules(existingRule, importedRule);
-			} else {
-				baseGroup.getRule().add(0, importedRule.copy());
-			}
-		}
-	}
-
-	/**
-	 * Merges two rules recursively.
-	 * Local rule has priority; imported subrules are added if not overridden.
-	 */
-	void mergeRules(
-			StructureMap.StructureMapGroupRuleComponent baseRule,
-			StructureMap.StructureMapGroupRuleComponent importedRule) {
-
-		if (baseRule.getSource().isEmpty() && !importedRule.getSource().isEmpty()) {
-			baseRule.getSource()
-					.addAll(importedRule.getSource().stream()
-							.map(StructureMap.StructureMapGroupRuleSourceComponent::copy)
-							.toList());
-		}
-		if (baseRule.getTarget().isEmpty() && !importedRule.getTarget().isEmpty()) {
-			baseRule.getTarget()
-					.addAll(importedRule.getTarget().stream()
-							.map(StructureMap.StructureMapGroupRuleTargetComponent::copy)
-							.toList());
-		}
-
-		for (StructureMap.StructureMapGroupRuleComponent importedSubRule : importedRule.getRule()) {
-			Optional<StructureMap.StructureMapGroupRuleComponent> existingSubRuleOpt = baseRule.getRule().stream()
-					.filter(r -> r.getName().equals(importedSubRule.getName()))
-					.findFirst();
-
-			if (existingSubRuleOpt.isPresent()) {
-				mergeRules(existingSubRuleOpt.get(), importedSubRule);
-			} else {
-				baseRule.getRule().add(importedSubRule.copy());
-			}
-		}
-
-		for (StructureMap.StructureMapGroupRuleDependentComponent importedDependent : importedRule.getDependent()) {
-			boolean exists = baseRule.getDependent().stream()
-					.anyMatch(dep -> dep.getName().equals(importedDependent.getName()));
-			if (!exists) {
-				baseRule.getDependent().add(importedDependent.copy());
-			}
-		}
-	}
-
-	/**
-	 * Merge contained resources (variables, structures, etc.) from imported maps into the base one.
-	 * Locally defined variables (baseContained) have priority.
-	 */
-	void mergeVariables(List<Resource> baseContained, List<Resource> importedContained) {
-		if (importedContained == null || importedContained.isEmpty()) {
-			return;
-		}
-		if (baseContained == null) {
-			baseContained = new ArrayList<>();
-		}
-
-		for (Resource importedResource : importedContained) {
-			boolean alreadyExists = baseContained.stream()
-					.anyMatch(existing -> existing.getIdElement() != null
-							&& importedResource.getIdElement() != null
-							&& existing.getIdElement()
-									.getIdPart()
-									.equals(importedResource.getIdElement().getIdPart()));
-
-			if (!alreadyExists) {
-				baseContained.add(importedResource.copy());
-			}
-		}
 	}
 }

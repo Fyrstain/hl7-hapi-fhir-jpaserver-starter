@@ -20,7 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -107,13 +106,11 @@ class MapperImportStructureMapTest {
 		};
 
 		doReturn(importSearchResult).when(structureMapDao).search(any());
-		doNothing().when(mapper).mergeStructureMaps(any(), any());
 
 		List<StructureMap> importedMaps = new ArrayList<>();
 
 		StructureMap result = mapper.resolveImports(baseMap, new HashSet<>(), importedMaps);
 
-		verify(mapper).mergeStructureMaps(any(), any());
 		assertNotNull(result);
 		assertEquals("http://example.org/base", result.getUrl());
 		assertEquals(1, importedMaps.size());
@@ -162,7 +159,7 @@ class MapperImportStructureMapTest {
 
 		importedMap.getGroup().add(importedGroup);
 
-		mapper.mergeStructureMaps(baseMap, importedMap);
+		MapMerger.mergeStructureMaps(baseMap, importedMap);
 
 		assertEquals(1, baseMap.getGroup().size());
 		assertEquals("GroupA", baseMap.getGroup().get(0).getName());
@@ -172,7 +169,7 @@ class MapperImportStructureMapTest {
 	void mergeStructureMaps_shouldInheritDescriptionIfBaseEmpty() {
 		importedMap.setDescription("Imported desc");
 
-		mapper.mergeStructureMaps(baseMap, importedMap);
+		MapMerger.mergeStructureMaps(baseMap, importedMap);
 
 		assertEquals("Imported desc", baseMap.getDescription());
 	}
@@ -187,7 +184,7 @@ class MapperImportStructureMapTest {
 		importedGroup.setName("GroupA");
 		importedMap.getGroup().add(importedGroup);
 
-		mapper.mergeStructureMaps(baseMap, importedMap);
+		MapMerger.mergeStructureMaps(baseMap, importedMap);
 
 		assertEquals(1, baseMap.getGroup().size());
 	}
@@ -207,7 +204,7 @@ class MapperImportStructureMapTest {
 		g1.addInput(input1);
 		g2.addInput(input2);
 
-		assertTrue(mapper.sameGroupSignature(g1, g2));
+		assertTrue(MapMerger.sameGroupSignature(g1, g2));
 	}
 
 	@Test
@@ -218,7 +215,7 @@ class MapperImportStructureMapTest {
 		g1.setName("groupA");
 		g2.setName("groupB");
 
-		assertFalse(mapper.sameGroupSignature(g1, g2));
+		assertFalse(MapMerger.sameGroupSignature(g1, g2));
 	}
 
 	@Test
@@ -238,22 +235,14 @@ class MapperImportStructureMapTest {
 		importedGroup.addRule(importedRule2);
 
 		Mapper mapper = spy(new Mapper(null, null, null, null, null, null));
-		doNothing().when(mapper).mergeRules(any(), any()); // évite la récursion
 
 		// WHEN
-		Method mergeGroups = Mapper.class.getDeclaredMethod(
-			"mergeGroups",
-			StructureMap.StructureMapGroupComponent.class,
-			StructureMap.StructureMapGroupComponent.class
-		);
-		mergeGroups.setAccessible(true);
-		mergeGroups.invoke(mapper, baseGroup, importedGroup);
+		StructureMap.StructureMapGroupComponent mergedGroup = MapMerger.mergeGroup(baseGroup, importedGroup);
 
 		// THEN
-		assertEquals(2, baseGroup.getRule().size());
-		assertEquals("RuleB", baseGroup.getRule().get(0).getName(), "La nouvelle règle importée doit être ajoutée en tête");
-		assertEquals("RuleA", baseGroup.getRule().get(1).getName(), "La règle existante reste après");
-		verify(mapper).mergeRules(any(), any());
+		assertEquals(2, mergedGroup.getRule().size());
+		assertEquals("RuleA", mergedGroup.getRule().get(0).getName(), "La règle existante reste en tête");
+		assertEquals("RuleB", mergedGroup.getRule().get(1).getName(), "La nouvelle règle importée doit être ajoutée après");
 	}
 
 
@@ -273,11 +262,11 @@ class MapperImportStructureMapTest {
 		dependent.setName("Dep1");
 		importedRule.addDependent(dependent);
 
-		mapper.mergeRules(baseRule, importedRule);
+		StructureMap.StructureMapGroupRuleComponent mergedRule = MapMerger.mergeRule(baseRule, importedRule);
 
-		assertEquals(1, baseRule.getRule().size());
-		assertEquals("SubRule1", baseRule.getRule().get(0).getName());
-		assertEquals(1, baseRule.getDependent().size());
+		assertEquals(1, mergedRule.getRule().size());
+		assertEquals("SubRule1", mergedRule.getRule().get(0).getName());
+		assertEquals(1, mergedRule.getDependent().size());
 	}
 
 	@Test
@@ -288,7 +277,7 @@ class MapperImportStructureMapTest {
 		List<Resource> baseContained = new ArrayList<>();
 		List<Resource> importedContained = List.of(imported);
 
-		mapper.mergeVariables(baseContained, importedContained);
+		MapMerger.mergeVariables(baseContained, importedContained);
 
 		assertEquals(1, baseContained.size());
 	}
@@ -304,7 +293,7 @@ class MapperImportStructureMapTest {
 		List<Resource> baseContained = new ArrayList<>(List.of(existing));
 		List<Resource> importedContained = List.of(imported);
 
-		mapper.mergeVariables(baseContained, importedContained);
+		MapMerger.mergeVariables(baseContained, importedContained);
 
 		assertEquals(1, baseContained.size());
 	}
