@@ -23,7 +23,7 @@ public class XMLDataReader {
 		NamedNodeMap attributes = element.getAttributes();
 		for (int i = 0; i < attributes.getLength(); i++) {
 			Node node = attributes.item(i);
-			//These should be attributes node
+			// These should be attributes node
 			if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
 				map.put(node.getNodeName(), node.getNodeValue());
 			}

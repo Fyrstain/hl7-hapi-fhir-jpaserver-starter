@@ -250,6 +250,81 @@ class MapperTestProcessHPRIM {
 	}
 
 	@Test
+	void processHPRIMObject_shouldReturnRawSegment_whenFieldZeroIsRequested() {
+		FHIRPathEngine fhirPathEngine = mock(FHIRPathEngine.class);
+		Mapper mapper = newMapper(fhirPathEngine);
+
+		HPRIMSegment obx = new HPRIMSegment("OBX");
+		obx.setRawSegment("OBX|1|TX|NOTE||Compte rendu reconstitue");
+		HPRIMMessage msg = new HPRIMMessage();
+		msg.addSegment(obx);
+
+		MappingContext context = mock(MappingContext.class);
+		when(context.getSources()).thenReturn(List.of(source("src", "OBX-0", "string")));
+		StructureMap.StructureMapGroupRuleComponent rule = new StructureMap.StructureMapGroupRuleComponent();
+		rule.setName("ruleX");
+		when(context.getRule()).thenReturn(rule);
+		when(context.getVariables()).thenReturn(mock(Variables.class));
+
+		List<Object> out = mapper.processHPRIMObject(context, msg);
+
+		assertEquals(1, out.size());
+		assertInstanceOf(StringType.class, out.get(0));
+		assertEquals("OBX|1|TX|NOTE||Compte rendu reconstitue", ((StringType) out.get(0)).getValue());
+	}
+
+	@Test
+	void processHPRIMObject_shouldReturnAttachedAddendumSegmentsFromParentSegment() {
+		FHIRPathEngine fhirPathEngine = mock(FHIRPathEngine.class);
+		Mapper mapper = newMapper(fhirPathEngine);
+
+		HPRIMSegment obx = new HPRIMSegment("OBX");
+		HPRIMSegment addendum = new HPRIMSegment("A");
+		addendum.setRawSegment("A|partie 2");
+		addendum.setRawContent("partie 2");
+		addendum.addField(new String[] { "partie 2" });
+		obx.addAttachedSegment(addendum);
+
+		MappingContext context = mock(MappingContext.class);
+		when(context.getSources()).thenReturn(List.of(source("src", "A", "string")));
+		StructureMap.StructureMapGroupRuleComponent rule = new StructureMap.StructureMapGroupRuleComponent();
+		rule.setName("ruleX");
+		when(context.getRule()).thenReturn(rule);
+
+		List<Object> out = mapper.processHPRIMObject(context, obx);
+
+		assertEquals(1, out.size());
+		assertInstanceOf(HPRIMSegment.class, out.get(0));
+		assertSame(addendum, out.get(0));
+	}
+
+	@Test
+	void processHPRIMObject_shouldExtractAttachedAddendumTextFromParentSegment() {
+		FHIRPathEngine fhirPathEngine = mock(FHIRPathEngine.class);
+		Mapper mapper = newMapper(fhirPathEngine);
+
+		HPRIMSegment obx = new HPRIMSegment("OBX");
+		HPRIMSegment addendum = new HPRIMSegment("A");
+		addendum.setRawSegment("A|partie 2|avec|pipes");
+		addendum.setRawContent("partie 2|avec|pipes");
+		addendum.addField(new String[] { "partie 2|avec|pipes" });
+		obx.addAttachedSegment(addendum);
+
+		MappingContext context = mock(MappingContext.class);
+		when(context.getSources()).thenReturn(List.of(source("src", "A-1", "string")));
+		StructureMap.StructureMapGroupRuleComponent rule = new StructureMap.StructureMapGroupRuleComponent();
+		rule.setName("ruleX");
+		when(context.getRule()).thenReturn(rule);
+		when(context.getVariables()).thenReturn(mock(Variables.class));
+
+		List<Object> out = mapper.processHPRIMObject(context, obx);
+
+		assertEquals(1, out.size());
+		assertInstanceOf(StringType.class, out.get(0));
+		assertEquals("partie 2|avec|pipes", ((StringType) out.get(0)).getValue());
+	}
+
+	@Test
 	void processHPRIMObject_shouldExtractSubComponent_whenProvided() {
 		FHIRPathEngine fhirPathEngine = mock(FHIRPathEngine.class);
 		Mapper mapper = newMapper(fhirPathEngine);

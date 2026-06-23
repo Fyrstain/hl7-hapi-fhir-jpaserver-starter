@@ -42,6 +42,17 @@ class HPRIMPathTest {
 	}
 
 	@Test
+	void constructor_shouldParseRawSegmentReference() {
+		HPRIMPath path = new HPRIMPath("OBX-0");
+
+		assertEquals("OBX", path.getSegment());
+		assertTrue(path.isRawSegmentReference());
+		assertNull(path.getField());
+		assertEquals(0, path.getFieldRepetition());
+		assertFalse(path.hasExplicitComponent());
+	}
+
+	@Test
 	void constructor_shouldParseFieldWithRepetition() {
 		HPRIMPath path = new HPRIMPath("P-8[3]");
 
@@ -91,6 +102,14 @@ class HPRIMPathTest {
 		assertThrows(
 			InvalidRequestException.class,
 			() -> new HPRIMPath("INVALID-PATH-TEST")
+		);
+	}
+
+	@Test
+	void constructor_shouldThrowExceptionForInvalidRawSegmentPath() {
+		assertThrows(
+			InvalidRequestException.class,
+			() -> new HPRIMPath("OBX-0-1")
 		);
 	}
 

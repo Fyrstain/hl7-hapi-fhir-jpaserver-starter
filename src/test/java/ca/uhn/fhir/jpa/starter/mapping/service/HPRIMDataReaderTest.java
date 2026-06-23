@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -85,10 +86,46 @@ class HPRIMDataReaderTest {
 		assertArrayEquals(new String[]{""}, l.getFields().get(1));  // empty because "L|1||1|31"
 		assertArrayEquals(new String[]{"1"}, l.getFields().get(2));
 		assertArrayEquals(new String[]{"31"}, l.getFields().get(3));
+
+		assertEquals("ORU", msg.getMessageType());
+		assertEquals(List.of("H", "P", "OBR", "OBX", "OBX", "L"),
+				msg.getOrderedSegments().stream().map(HPRIMSegment::getName).toList());
+		assertEquals(List.of(1, 2, 3, 4, 4, 1),
+				msg.getOrderedSegments().stream().map(HPRIMSegment::getLevel).toList());
 	}
 
 	@Test
 	void parseData_shouldThrowInternalErrorException_onInvalidBase64() {
 		assertThrows(InternalErrorException.class, () -> HPRIMDataReader.parseData("%%%NOT_BASE64%%%"));
+	}
+
+	@Test
+	void parseData_shouldKeepAddendumSegmentSeparateAndAttachItToPreviousSegment() {
+		String raw =
+				"H|^~\\&|||LABSYS^LAB|||ORU|||SITE01^HOSPITAL||P|H2.1^C|20260128121030\n" +
+				"P|0001\n" +
+				"OBX|1|TX|NOTE||Compte rendu tres long part 1\n" +
+				"A| part 2|avec|pipes^et^carets\n" +
+				"L|1||1|4\n";
+
+		String b64 = Base64.getEncoder().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
+		HPRIMMessage msg = HPRIMDataReader.parseData(b64);
+
+		assertEquals(1, msg.getSegments("A").size());
+		assertEquals(List.of("H", "P", "OBX", "A", "L"),
+				msg.getOrderedSegments().stream().map(HPRIMSegment::getName).toList());
+
+		HPRIMSegment obx = msg.getSegments("OBX").get(0);
+		HPRIMSegment addendum = msg.getSegments("A").get(0);
+
+		assertEquals("OBX|1|TX|NOTE||Compte rendu tres long part 1", obx.getRawSegment());
+		assertEquals(1, obx.getAttachedSegments("A").size());
+		assertSame(addendum, obx.getAttachedSegments("A").get(0));
+
+		assertEquals("A| part 2|avec|pipes^et^carets", addendum.getRawSegment());
+		assertEquals(" part 2|avec|pipes^et^carets", addendum.getRawContent());
+		assertArrayEquals(new String[] { " part 2|avec|pipes^et^carets" }, addendum.getFields().get(0));
+		assertEquals(4, obx.getLevel());
+		assertEquals(4, addendum.getLevel());
 	}
 }

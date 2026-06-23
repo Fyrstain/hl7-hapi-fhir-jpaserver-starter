@@ -8,8 +8,14 @@ import java.util.Map;
 public class HPRIMMessage {
 
 	private final Map<String, List<HPRIMSegment>> segments = new LinkedHashMap<>();
+	private final List<HPRIMSegment> orderedSegments = new ArrayList<>();
+	private String messageType;
 
 	public void addSegment(HPRIMSegment segment) {
+		if (segment.getSequence() < 0) {
+			segment.setSequence(orderedSegments.size());
+		}
+		orderedSegments.add(segment);
 		segments.computeIfAbsent(segment.getName(), k -> new ArrayList<>()).add(segment);
 	}
 
@@ -19,5 +25,23 @@ public class HPRIMMessage {
 
 	public Map<String, List<HPRIMSegment>> getAllSegments() {
 		return segments;
+	}
+
+	public List<HPRIMSegment> getOrderedSegments() {
+		return orderedSegments;
+	}
+
+	public List<HPRIMSegment> getSegmentsAtLevel(int level) {
+		return orderedSegments.stream()
+				.filter(segment -> segment.getLevel() == level)
+				.toList();
+	}
+
+	public String getMessageType() {
+		return messageType;
+	}
+
+	public void setMessageType(String messageType) {
+		this.messageType = messageType;
 	}
 }

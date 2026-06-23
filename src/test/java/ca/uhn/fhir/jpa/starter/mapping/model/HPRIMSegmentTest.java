@@ -55,4 +55,23 @@ class HPRIMSegmentTest {
 
 		assertEquals(1, segment.getFields().size());
 	}
+
+	@Test
+	void getRawSegment_shouldRebuildSegmentWhenNoRawValueWasCaptured() {
+		HPRIMSegment segment = new HPRIMSegment("OBX");
+		segment.addField(new String[] { "1" });
+		segment.addField(new String[] { "TX" });
+		segment.addField(new String[] { "LINE1", "LINE2" });
+
+		assertEquals("OBX|1|TX|LINE1^LINE2", segment.getRawSegment());
+	}
+
+	@Test
+	void getRawContent_shouldReturnPayloadWithoutSegmentName() {
+		HPRIMSegment segment = new HPRIMSegment("A");
+		segment.setRawSegment("A|texte libre|avec|separateurs");
+		segment.setRawContent("texte libre|avec|separateurs");
+
+		assertEquals("texte libre|avec|separateurs", segment.getRawContent());
+	}
 }

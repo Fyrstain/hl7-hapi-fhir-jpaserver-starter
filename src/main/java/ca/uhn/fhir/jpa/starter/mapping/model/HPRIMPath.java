@@ -18,6 +18,7 @@ public class HPRIMPath {
 	private final Integer component;
 	private final Integer subComponent;
 	private final boolean hasExplicitComponent;
+	private final boolean rawSegmentReference;
 
 	public HPRIMPath(String path) {
 		Matcher matcher = PATH_PATTERN.matcher(path);
@@ -27,14 +28,29 @@ public class HPRIMPath {
 
 		this.segment = matcher.group(1);
 		this.segmentIndex = matcher.group(2) != null ? Integer.parseInt(matcher.group(2)) : 0;
-		this.field = matcher.group(3) != null
-				? Integer.parseInt(matcher.group(3)) - 1
-				: null; // HL7/HPRIM fields are 1-based
-		this.fieldRepetition = matcher.group(4) != null ? Integer.parseInt(matcher.group(4)) : 0;
+		Integer parsedField = null;
+		boolean parsedRawSegmentReference = false;
+
+		if (matcher.group(3) != null) {
+			int fieldNumber = Integer.parseInt(matcher.group(3));
+			if (fieldNumber == 0) {
+				if (matcher.group(4) != null || matcher.group(5) != null || matcher.group(6) != null) {
+					throw new InvalidRequestException("Invalid HPRIM raw segment path: " + path);
+				}
+				parsedRawSegmentReference = true;
+			} else {
+				parsedField = fieldNumber - 1; // HL7/HPRIM fields are 1-based
+			}
+		}
+
+		this.field = parsedField;
+		this.fieldRepetition =
+				parsedRawSegmentReference ? 0 : matcher.group(4) != null ? Integer.parseInt(matcher.group(4)) : 0;
 		this.component = matcher.group(5) != null ? Integer.parseInt(matcher.group(5)) - 1 : null; // components 1-based
 		this.subComponent =
 				matcher.group(6) != null ? Integer.parseInt(matcher.group(6)) - 1 : null; // subcomponents 1-based
-		this.hasExplicitComponent = path.matches(".+-\\d+-\\d+.*");
+		this.hasExplicitComponent = !parsedRawSegmentReference && path.matches(".+-\\d+-\\d+.*");
+		this.rawSegmentReference = parsedRawSegmentReference;
 	}
 
 	public String getSegment() {
@@ -65,13 +81,18 @@ public class HPRIMPath {
 		return hasExplicitComponent;
 	}
 
+	public boolean isRawSegmentReference() {
+		return rawSegmentReference;
+	}
+
 	@Override
 	public String toString() {
 		return "HPRIMPath{" + "segment='"
 				+ segment + '\'' + ", segmentIndex="
 				+ segmentIndex + ", field="
 				+ field + ", fieldRepetition="
-				+ fieldRepetition + ", component="
+				+ fieldRepetition + ", rawSegmentReference="
+				+ rawSegmentReference + ", component="
 				+ component + ", subComponent="
 				+ subComponent + '}';
 	}

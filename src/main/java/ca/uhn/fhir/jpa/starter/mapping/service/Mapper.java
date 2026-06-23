@@ -412,7 +412,8 @@ public class Mapper {
 	 * @return true if at least one rule has a CSV source
 	 */
 	private boolean hasCSVSourceInGroup(MappingContext context) {
-		for (StructureMap.StructureMapGroupRuleComponent rule : context.getGroup().getRule()) {
+		for (StructureMap.StructureMapGroupRuleComponent rule :
+				context.getGroup().getRule()) {
 			if (!rule.getSource().isEmpty()) {
 				String sourceContext = rule.getSource().get(0).getContext();
 				String type = context.getGroup().getInput().stream()
@@ -450,7 +451,8 @@ public class Mapper {
 	 * @return the CSVRecords object or null if not found
 	 */
 	private CSVRecords extractCSVRecordsFromGroup(MappingContext context) {
-		for (StructureMap.StructureMapGroupRuleComponent rule : context.getGroup().getRule()) {
+		for (StructureMap.StructureMapGroupRuleComponent rule :
+				context.getGroup().getRule()) {
 			if (!rule.getSource().isEmpty()) {
 				String sourceContext = rule.getSource().get(0).getContext();
 				Object source = context.getVariables().get(INPUT, sourceContext);
@@ -484,24 +486,21 @@ public class Mapper {
 			// Execute ALL rules for this row
 			for (StructureMap.StructureMapGroupRuleComponent rule :
 					context.getGroup().getRule()) {
-				
+
 				// Find the CSV source context name
 				if (!rule.getSource().isEmpty()) {
 					String sourceContext = rule.getSource().get(0).getContext();
-					
+
 					// Prepare variables for this CSV record
 					Variables rowVariables = context.getVariables().copy();
-					
+
 					// Create a single-record CSVRecords object for this row
-					CSVRecords singleRowRecords = new CSVRecords(
-							Collections.singletonList(csvRecord));
+					CSVRecords singleRowRecords = new CSVRecords(Collections.singletonList(csvRecord));
 					rowVariables.add(INPUT, sourceContext, singleRowRecords);
 
 					// Execute the rule with this row's variables
-					MappingContext ruleContext = new MappingContext(
-							context.getStructureMap(),
-							context.getGroup(),
-							rowVariables);
+					MappingContext ruleContext =
+							new MappingContext(context.getStructureMap(), context.getGroup(), rowVariables);
 					ruleContext.setRule(rule);
 					executeRule(ruleContext, atRoot);
 				}
@@ -1540,6 +1539,8 @@ public class Mapper {
 				} else if (hprimObject instanceof HPRIMSegment seg) {
 					if (seg.getName().equals(path.getSegment())) {
 						segments.add(seg);
+					} else {
+						segments.addAll(seg.getAttachedSegments(path.getSegment()));
 					}
 				}
 
@@ -1550,7 +1551,9 @@ public class Mapper {
 
 				HPRIMSegment segment = segments.get(path.getSegmentIndex() != null ? path.getSegmentIndex() : 0);
 
-				if (path.getField() == null) {
+				if (path.isRawSegmentReference()) {
+					item = getFHIRItem(segment.getRawSegment(), source.getType());
+				} else if (path.getField() == null) {
 					for (HPRIMSegment seg : segments) {
 						items.add(seg);
 					}
@@ -2734,23 +2737,21 @@ public class Mapper {
 		} else {
 			ConceptMap cmap = null;
 			if (conceptMapUrl.startsWith("#")) {
-				for (Resource r : context.getStructureMap().getContained()) {
-					if (r instanceof ConceptMap && r.getId().equals(conceptMapUrl)) {
-						cmap = (ConceptMap) r;
-						su = context.getStructureMap().getUrl() + "#" + conceptMapUrl;
-					}
+				cmap = findContainedConceptMap(context.getStructureMap(), conceptMapUrl);
+				if (cmap != null) {
+					su = context.getStructureMap().getUrl() + conceptMapUrl;
 				}
 				if (cmap == null) throw new FHIRException("Unable to translate - cannot find map " + conceptMapUrl);
 			} else {
 				if (conceptMapUrl.contains("#")) {
 					String[] p = conceptMapUrl.split("\\#");
-					StructureMap mapU = worker.fetchResource(StructureMap.class, p[0]);
+					StructureMap mapU = context.getStructureMap().getUrl().equals(p[0])
+							? context.getStructureMap()
+							: worker.fetchResource(StructureMap.class, p[0]);
 					if (mapU != null) {
-						for (Resource r : mapU.getContained()) {
-							if (r instanceof ConceptMap && r.getId().equals(p[1])) {
-								cmap = (ConceptMap) r;
-								su = conceptMapUrl;
-							}
+						cmap = findContainedConceptMap(mapU, p[1]);
+						if (cmap != null) {
+							su = conceptMapUrl;
 						}
 					}
 				}
@@ -2826,6 +2827,34 @@ public class Mapper {
 				return outcome;
 			}
 		}
+	}
+
+	private ConceptMap findContainedConceptMap(StructureMap structureMap, String reference) {
+		if (structureMap == null || reference == null) {
+			return null;
+		}
+
+		String normalizedReference = normalizeContainedReference(reference);
+		for (Resource resource : structureMap.getContained()) {
+			if (!(resource instanceof ConceptMap conceptMap)) {
+				continue;
+			}
+
+			String containedId = conceptMap.getIdElement().getIdPart();
+			if (containedId == null) {
+				continue;
+			}
+
+			if (containedId.equals(normalizedReference)) {
+				return conceptMap;
+			}
+		}
+
+		return null;
+	}
+
+	private String normalizeContainedReference(String reference) {
+		return reference.startsWith("#") ? reference.substring(1) : reference;
 	}
 
 	/**

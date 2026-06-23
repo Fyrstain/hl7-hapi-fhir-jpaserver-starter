@@ -88,6 +88,35 @@ public class MapperTestTranslate {
 	}
 
 	@Test
+	void mapHL7v2ToFHIRTestTranslateContainedWithCanonicalFragment() {
+		FhirContext context = FhirContext.forR4();
+		PrePopulatedValidationSupport prePopulatedValidationSupport = new PrePopulatedValidationSupport(context);
+		this.validationSupport = new ValidationSupportChain(prePopulatedValidationSupport, new DefaultProfileValidationSupport(context));
+
+		this.hapiContext = new HapiWorkerContext(context, this.validationSupport);
+
+		FHIRPathEngine fhirPathEngine = new FHIRPathEngine(hapiContext);
+
+		IGenericClient clientStructureMap = null;
+		Mapper mapper = new Mapper(hapiContext, fhirPathEngine, null, structureMapDao, clientStructureMap, null);
+
+		Parameters.ParametersParameterComponent param = new Parameters.ParametersParameterComponent();
+		param.setName("input");
+
+		param.addPart(new Parameters.ParametersParameterComponent().setName("source")
+			.setResource(new Binary().setContentType("text/x-hl7-ft").setContentAsBase64(Base64.encode(hl7v2Message.getBytes()))));
+
+		Parameters parameters = new Parameters().addParameter(param);
+
+		Parameters result = mapper.map(getStructureMapContainedCanonicalFragment(), parameters);
+		assertNotNull(result.getParameter("ObservationTarget").getResource());
+		assertTrue(result.getParameter("ObservationTarget").getResource() instanceof Binary);
+		Observation observation = (Observation) context.newJsonParser().parseResource(
+			new ByteArrayInputStream(((Binary) result.getParameter("ObservationTarget").getResource()).getContent()));
+		assertEquals("2823-3", observation.getCode().getCoding().get(0).getCode());
+	}
+
+	@Test
 	void mapHL7v2ToFHIRTestTranslateLocal() {
 		FhirContext context = FhirContext.forR4();
 		PrePopulatedValidationSupport prePopulatedValidationSupport = new PrePopulatedValidationSupport(context);
@@ -177,9 +206,15 @@ public class MapperTestTranslate {
 		return map;
 	}
 
+	private StructureMap getStructureMapContainedCanonicalFragment() {
+		StructureMap map = getStructureMap(mapUrl() + "#CM-CHUGA-blood-LabToLoinc");
+		map.addContained(getConceptMap());
+		return map;
+	}
+
 	private ConceptMap getConceptMap() {
 		ConceptMap cm = new ConceptMap();
-		cm.setId("#CM-CHUGA-blood-LabToLoinc");
+		cm.setId("CM-CHUGA-blood-LabToLoinc");
 		cm.setUrl("http://fyrstain.com/fhir/R4/okeiro-ig/ConceptMap/CM-CHUGA-blood-LabToLoinc");
 
 		cm.setStatus(Enumerations.PublicationStatus.DRAFT);
@@ -211,7 +246,7 @@ public class MapperTestTranslate {
 		// StructureMap root
 		// ------------------------------------------------------------
 		StructureMap map = new StructureMap();
-		map.setUrl("http://fyrstain.com/fhir/R4/okeiro-ig/StructureMap/CHUGA-OBX-to-LabReport-Observation");
+		map.setUrl(mapUrl());
 
 		// ------------------------------------------------------------
 		// Structure definitions
@@ -312,5 +347,9 @@ public class MapperTestTranslate {
 			.setValue(new org.hl7.fhir.r4.model.StringType("code"));
 
 		return map;
+	}
+
+	private String mapUrl() {
+		return "http://fyrstain.com/fhir/R4/okeiro-ig/StructureMap/CHUGA-OBX-to-LabReport-Observation";
 	}
 }

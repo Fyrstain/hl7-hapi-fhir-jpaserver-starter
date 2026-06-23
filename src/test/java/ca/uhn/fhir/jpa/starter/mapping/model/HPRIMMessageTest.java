@@ -80,4 +80,41 @@ class HPRIMMessageTest {
 		List<String> keys = message.getAllSegments().keySet().stream().toList();
 		assertEquals(List.of("H", "P", "OBR"), keys);
 	}
+
+	@Test
+	@DisplayName("getOrderedSegments should preserve the global insertion order")
+	void getOrderedSegments_shouldPreserveGlobalInsertionOrder() {
+		HPRIMMessage message = new HPRIMMessage();
+		HPRIMSegment h = new HPRIMSegment("H");
+		HPRIMSegment p = new HPRIMSegment("P");
+		HPRIMSegment obr = new HPRIMSegment("OBR");
+
+		message.addSegment(h);
+		message.addSegment(p);
+		message.addSegment(obr);
+
+		assertEquals(List.of(h, p, obr), message.getOrderedSegments());
+		assertEquals(0, h.getSequence());
+		assertEquals(1, p.getSequence());
+		assertEquals(2, obr.getSequence());
+	}
+
+	@Test
+	@DisplayName("getSegmentsAtLevel should filter ordered segments by hierarchy level")
+	void getSegmentsAtLevel_shouldFilterByLevel() {
+		HPRIMMessage message = new HPRIMMessage();
+		HPRIMSegment p = new HPRIMSegment("P");
+		HPRIMSegment obr = new HPRIMSegment("OBR");
+		HPRIMSegment obx = new HPRIMSegment("OBX");
+		p.setLevel(2);
+		obr.setLevel(3);
+		obx.setLevel(4);
+
+		message.addSegment(p);
+		message.addSegment(obr);
+		message.addSegment(obx);
+
+		assertEquals(List.of(obr), message.getSegmentsAtLevel(3));
+		assertEquals(List.of(obx), message.getSegmentsAtLevel(4));
+	}
 }
