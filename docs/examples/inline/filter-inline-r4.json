@@ -1,0 +1,21 @@
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    {
+      "name": "fhirVersion",
+      "valueCode": "R4"
+    },
+    {
+      "name": "statusCode",
+      "valueInteger": 200
+    },
+    {
+      "name": "responseBodyJson",
+      "valueString": "{\"resourceType\":\"Patient\",\"name\":[{\"family\":\"Doe\",\"given\":[\"John\"]}],\"telecom\":[{\"system\":\"phone\",\"value\":\"0102030405\"}]}"
+    },
+    {
+      "name": "permissionJson",
+      "valueString": "{\"resourceType\":\"Permission\",\"status\":\"active\",\"rule\":[{\"type\":\"deny\",\"activity\":[{\"action\":[{\"coding\":[{\"code\":\"read\"}]}]}],\"data\":[{\"resource\":[{\"meaning\":\"instance\",\"reference\":{\"display\":\"Patient\"}}],\"expression\":{\"language\":\"text/fhirpath\",\"expression\":\"Patient.telecom\"}}]}]}"
+    }
+  ]
+}

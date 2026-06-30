@@ -1,0 +1,25 @@
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    {
+      "name": "fhirVersion",
+      "valueCode": "R4"
+    },
+    {
+      "name": "method",
+      "valueCode": "GET"
+    },
+    {
+      "name": "url",
+      "valueString": "/fhir/Patient"
+    },
+    {
+      "name": "resourceType",
+      "valueCode": "Patient"
+    },
+    {
+      "name": "permissionJson",
+      "valueString": "{\"resourceType\":\"Permission\",\"status\":\"active\",\"rule\":[{\"type\":\"permit\",\"activity\":[{\"action\":[{\"coding\":[{\"code\":\"search\"}]}]}],\"data\":[{\"resource\":[{\"meaning\":\"instance\",\"reference\":{\"display\":\"Patient\"}}],\"expression\":{\"language\":\"application/x-fhir-query\",\"expression\":\"name=Toto\"}}]}]}"
+    }
+  ]
+}

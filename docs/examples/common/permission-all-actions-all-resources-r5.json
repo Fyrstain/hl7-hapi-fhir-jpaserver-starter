@@ -1,0 +1,56 @@
+{
+  "resourceType": "Permission",
+  "id": "permission-all-actions-all-resources",
+  "status": "active",
+  "rule": [
+    {
+      "type": "permit",
+      "activity": [
+        {
+          "action": [
+            {
+              "coding": [
+                {
+                  "code": "metadata"
+                },
+                {
+                  "code": "read"
+                },
+                {
+                  "code": "search"
+                },
+                {
+                  "code": "create"
+                },
+                {
+                  "code": "update"
+                },
+                {
+                  "code": "delete"
+                },
+                {
+                  "code": "patch"
+                },
+                {
+                  "code": "custom"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "data": [
+        {
+          "resource": [
+            {
+              "meaning": "instance",
+              "reference": {
+                "display": "*"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

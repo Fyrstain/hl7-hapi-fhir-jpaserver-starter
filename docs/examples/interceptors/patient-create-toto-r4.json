@@ -1,0 +1,28 @@
+{
+  "resourceType": "Patient",
+  "id": "example-toto",
+  "active": true,
+  "identifier": [
+    {
+      "system": "urn:example:patient",
+      "value": "example-toto"
+    }
+  ],
+  "name": [
+    {
+      "family": "Allowed",
+      "given": [
+        "Toto"
+      ]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1990-01-01",
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "0102030405",
+      "use": "mobile"
+    }
+  ]
+}

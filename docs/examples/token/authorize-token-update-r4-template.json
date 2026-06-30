@@ -1,0 +1,29 @@
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    {
+      "name": "fhirVersion",
+      "valueCode": "R4"
+    },
+    {
+      "name": "authorization",
+      "valueString": "Bearer __TOKEN__"
+    },
+    {
+      "name": "method",
+      "valueCode": "PUT"
+    },
+    {
+      "name": "url",
+      "valueString": "/fhir/Patient/example-toto"
+    },
+    {
+      "name": "resourceType",
+      "valueCode": "Patient"
+    },
+    {
+      "name": "resourceId",
+      "valueString": "example-toto"
+    }
+  ]
+}

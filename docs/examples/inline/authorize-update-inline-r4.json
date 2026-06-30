@@ -1,0 +1,33 @@
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    {
+      "name": "fhirVersion",
+      "valueCode": "R4"
+    },
+    {
+      "name": "authorization",
+      "valueString": "Bearer test-token"
+    },
+    {
+      "name": "method",
+      "valueCode": "PUT"
+    },
+    {
+      "name": "url",
+      "valueString": "/fhir/Patient/example-toto"
+    },
+    {
+      "name": "resourceType",
+      "valueCode": "Patient"
+    },
+    {
+      "name": "resourceId",
+      "valueString": "example-toto"
+    },
+    {
+      "name": "permissionJson",
+      "valueString": "{\"resourceType\":\"Permission\",\"id\":\"permission-patient-crus\",\"status\":\"active\",\"rule\":[{\"type\":\"permit\",\"activity\":[{\"action\":[{\"coding\":[{\"code\":\"create\"},{\"code\":\"read\"},{\"code\":\"update\"},{\"code\":\"search\"}]}]}],\"data\":[{\"resource\":[{\"meaning\":\"instance\",\"reference\":{\"display\":\"Patient\"}}]}]},{\"type\":\"permit\",\"activity\":[{\"action\":[{\"coding\":[{\"code\":\"search\"}]}]}],\"data\":[{\"resource\":[{\"meaning\":\"instance\",\"reference\":{\"display\":\"Patient\"}}],\"expression\":{\"language\":\"application/x-fhir-query\",\"expression\":\"name=Toto\"}}]}]}"
+    }
+  ]
+}

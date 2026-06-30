@@ -1,0 +1,21 @@
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    {
+      "name": "fhirVersion",
+      "valueCode": "R4"
+    },
+    {
+      "name": "authorization",
+      "valueString": "Bearer __TOKEN__"
+    },
+    {
+      "name": "statusCode",
+      "valueInteger": 200
+    },
+    {
+      "name": "responseBodyJson",
+      "valueString": "{\"resourceType\":\"Patient\",\"id\":\"example-toto\",\"name\":[{\"family\":\"Allowed\",\"given\":[\"Toto\"]}],\"telecom\":[{\"system\":\"phone\",\"value\":\"0102030405\"}]}"
+    }
+  ]
+}

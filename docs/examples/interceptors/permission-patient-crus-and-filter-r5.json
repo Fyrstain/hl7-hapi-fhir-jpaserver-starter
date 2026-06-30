@@ -1,0 +1,95 @@
+{
+  "resourceType": "Permission",
+  "id": "permission-patient-crus-and-filter",
+  "status": "active",
+  "rule": [
+    {
+      "type": "permit",
+      "activity": [
+        {
+          "action": [
+            {
+              "coding": [
+                {
+                  "code": "create"
+                },
+                {
+                  "code": "read"
+                },
+                {
+                  "code": "update"
+                },
+                {
+                  "code": "search"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "data": [
+        {
+          "resource": [
+            {
+              "meaning": "instance",
+              "reference": {
+                "display": "Patient"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "permit",
+      "activity": [
+        {
+          "action": [
+            {
+              "coding": [
+                {
+                  "code": "search"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "data": [
+        {
+          "resource": [
+            {
+              "meaning": "instance",
+              "reference": {
+                "display": "Patient"
+              }
+            }
+          ],
+          "expression": {
+            "language": "application/x-fhir-query",
+            "expression": "name=Toto"
+          }
+        }
+      ]
+    },
+    {
+      "type": "deny",
+      "data": [
+        {
+          "resource": [
+            {
+              "meaning": "instance",
+              "reference": {
+                "display": "Patient"
+              }
+            }
+          ],
+          "expression": {
+            "language": "text/fhirpath",
+            "expression": "Patient.telecom"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "resourceType": "Permission",
+  "id": "permission-patient-search-only",
+  "status": "active",
+  "rule": [
+    {
+      "type": "permit",
+      "activity": [
+        {
+          "action": [
+            {
+              "coding": [
+                {
+                  "code": "search"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "data": [
+        {
+          "resource": [
+            {
+              "meaning": "instance",
+              "reference": {
+                "display": "Patient"
+              }
+            }
+          ],
+          "expression": {
+            "language": "application/x-fhir-query",
+            "expression": "name=Toto"
+          }
+        }
+      ]
+    }
+  ]
+}
