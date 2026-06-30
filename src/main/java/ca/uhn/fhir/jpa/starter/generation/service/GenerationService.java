@@ -80,7 +80,7 @@ public class GenerationService {
 			return readNdjsonAsBundle(ndjson);
 
 		} catch (Exception e) {
-			throw new IllegalStateException("Unable to generate resources with Dolus", e);
+			throw new IllegalStateException("Unable to generate resources with Dolus with message : " + e.getMessage(), e);
 		}
 	}
 
@@ -100,7 +100,13 @@ public class GenerationService {
 
 	private String resolveInputFolder(String realm) {
 		try {
-			return properties.getInputBaseDir().resolve(realm).toString();
+			Path realmPath = properties.getInputBaseDir().resolve(realm);
+			if (Files.exists(realmPath)) {
+				return realmPath.toString();
+			}
+			throw new IllegalArgumentException(
+				"Unsupported realm : " + realm
+			);
 		} catch (Exception e) {
 			throw new IllegalArgumentException(
 				"Unsupported realm : " + realm
