@@ -1,0 +1,8 @@
+hapi:
+  fhir:
+    generation:
+      enabled: true
+      jar-path: /opt/generation/dolus.jar
+      input-base-dir: /opt/generation/realms
+      work-dir: /opt/generation/output
+      maven-path: mvn
