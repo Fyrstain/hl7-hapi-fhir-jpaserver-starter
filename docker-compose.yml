@@ -1,6 +1,8 @@
 services:
   hapi-fhir-jpaserver-start:
-    build: .
+    build:
+      context: .
+      target: default
     container_name: hapi-fhir-jpaserver-start
     restart: on-failure
     environment:
@@ -9,8 +11,17 @@ services:
       SPRING_DATASOURCE_PASSWORD: "admin"
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      HAPI_FHIR_GENERATION_ENABLED: "true"
+      HAPI_FHIR_GENERATION_JAR_PATH: /opt/generation/dolus.jar
+      HAPI_FHIR_GENERATION_INPUT_BASE_DIR: /opt/generation/realms
+      HAPI_FHIR_GENERATION_WORK_DIR: /opt/generation/work
+      HAPI_FHIR_GENERATION_MAVEN_PATH: mvn
     ports:
-      - "8080:8080"
+      - "${HAPI_HTTP_PORT:-8080}:8080"
+    volumes:
+      - ../dolus/target/dolus.jar:/opt/generation/dolus.jar:ro
+      - ../dolus/input:/opt/generation/realms:ro
+      - ../dolus/output:/opt/generation/work
     depends_on:
       hapi-fhir-postgres:
         condition: service_healthy
