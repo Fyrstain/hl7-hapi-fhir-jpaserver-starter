@@ -33,6 +33,7 @@ public class AppProperties {
 	private final List<String> custom_provider_classes = new ArrayList<>();
 	private Boolean cr_enabled = false;
 	private Boolean ips_enabled = false;
+	private Boolean permission_enabled = false;
 	private Boolean openapi_enabled = false;
 	private Boolean mdm_enabled = false;
 	private String mdm_rules_json_location = "mdm-rules.json";
@@ -204,6 +205,14 @@ public class AppProperties {
 
 	public void setIps_enabled(Boolean ips_enabled) {
 		this.ips_enabled = ips_enabled;
+	}
+
+	public Boolean getPermission_enabled() {
+		return permission_enabled;
+	}
+
+	public void setPermission_enabled(Boolean permission_enabled) {
+		this.permission_enabled = permission_enabled;
 	}
 
 	public Boolean getMdm_enabled() {

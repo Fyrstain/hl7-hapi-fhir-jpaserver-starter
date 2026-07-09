@@ -1,0 +1,26 @@
+{
+  "resourceType": "Permission",
+  "id": "permission-filter-telecom",
+  "status": "active",
+  "rule": [
+    {
+      "type": "deny",
+      "data": [
+        {
+          "resource": [
+            {
+              "meaning": "instance",
+              "reference": {
+                "display": "Patient"
+              }
+            }
+          ],
+          "expression": {
+            "language": "text/fhirpath",
+            "expression": "Patient.telecom"
+          }
+        }
+      ]
+    }
+  ]
+}

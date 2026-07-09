@@ -53,6 +53,9 @@ import ca.uhn.fhir.jpa.starter.elastic.ElasticsearchBootSvcImpl;
 import ca.uhn.fhir.jpa.starter.errorreport.ErrorReportingExceptionInterceptor;
 import ca.uhn.fhir.jpa.starter.ig.ExtendedPackageInstallationSpec;
 import ca.uhn.fhir.jpa.starter.ig.IImplementationGuideOperationProvider;
+import ca.uhn.fhir.jpa.starter.permission.interceptor.PermissionRequestInterceptor;
+import ca.uhn.fhir.jpa.starter.permission.interceptor.PermissionResponseInterceptor;
+import ca.uhn.fhir.jpa.starter.permission.provider.PermissionOperationProvider;
 import ca.uhn.fhir.jpa.subscription.util.SubscriptionDebugLogInterceptor;
 import ca.uhn.fhir.jpa.util.ResourceCountCache;
 import ca.uhn.fhir.mdm.provider.MdmProviderLoader;
@@ -334,6 +337,9 @@ public class StarterJpaConfig {
 			ThreadSafeResourceDeleterSvc theThreadSafeResourceDeleterSvc,
 			ApplicationContext appContext,
 			Optional<IpsOperationProvider> theIpsOperationProvider,
+			Optional<PermissionOperationProvider> thePermissionOperationProvider,
+			Optional<PermissionRequestInterceptor> thePermissionRequestInterceptor,
+			Optional<PermissionResponseInterceptor> thePermissionResponseInterceptor,
 			Optional<IImplementationGuideOperationProvider> implementationGuideOperationProvider,
 			Optional<ErrorReportingExceptionInterceptor> errorReportingExceptionInterceptor,
 			DiffProvider diffProvider) {
@@ -514,6 +520,10 @@ public class StarterJpaConfig {
 
 		// register the IPS Provider
 		theIpsOperationProvider.ifPresent(fhirServer::registerProvider);
+		// register the Permission Engine operations
+		thePermissionOperationProvider.ifPresent(fhirServer::registerProvider);
+		thePermissionRequestInterceptor.ifPresent(fhirServer::registerInterceptor);
+		thePermissionResponseInterceptor.ifPresent(fhirServer::registerInterceptor);
 
 		if (appProperties.getUserRequestRetryVersionConflictsInterceptorEnabled()) {
 			fhirServer.registerInterceptor(new UserRequestRetryVersionConflictsInterceptor());
