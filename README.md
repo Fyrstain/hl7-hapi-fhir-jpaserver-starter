@@ -564,6 +564,65 @@ jpa:
     # Then comment all hibernate.search.backend.*
 ```
 
+### Docker compose with Dolus generation
+
+The default runtime image in this repository includes Maven so the custom `$generate` operation can invoke Dolus from inside
+the container. The image also embeds a vendored copy of the private Maven archetype
+`com.fyrstain.fhir:dolus-generator-archetype:1.0.0-SNAPSHOT`, so it does not depend on your local `.m2` anymore.
+
+The provided `docker-compose.yml` mounts the sibling `../dolus` project as follows:
+
+- `../dolus/target/dolus.jar` -> `/opt/generation/dolus.jar`
+- `../dolus/input` -> `/opt/generation/realms`
+- `../dolus/output` -> `/opt/generation/work`
+
+Start the stack with:
+
+```bash
+docker-compose up -d --build
+```
+
+If port `8080` is already used on your machine, override the published host port without editing the compose file:
+
+```bash
+HAPI_HTTP_PORT=8081 docker-compose up -d --build
+```
+
+If the archetype changes, refresh the vendored files under [docker/m2](hl7-hapi-fhir-jpaserver-starter/docker/m2:1)
+before rebuilding the image.
+
+Once the server is up, call the system-level operation on `POST /fhir/$generate`. Example payload:
+
+```json
+{
+  "resourceType": "Parameters",
+  "parameter": [
+    { "name": "realm", "valueString": "fr" },
+    { "name": "count", "valueInteger": 10 }
+  ]
+}
+```
+
+Example `curl`:
+
+```bash
+curl -X POST "http://localhost:8080/fhir/$generate" \
+  -H "Content-Type: application/fhir+json" \
+  -d '{
+    "resourceType":"Parameters",
+    "parameter":[
+      {"name":"realm","valueString":"fr"},
+      {"name":"count","valueInteger":10}
+    ]
+  }'
+```
+
+If you still want the smaller runtime without Dolus/Maven support, build the `distroless` target explicitly:
+
+```bash
+docker build --target distroless -t hapi-fhir:distroless .
+```
+
 ## Running hapi-fhir-jpaserver directly from IntelliJ as Spring Boot
 Make sure you run with the maven profile called ```boot``` and NOT also ```jetty```. Then you are ready to press debug the project directly without any extra Application Servers.
 

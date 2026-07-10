@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.fyrstain.fhir</groupId>
+  <artifactId>dolus-generator-archetype</artifactId>
+  <versioning>
+    <versions>
+      <version>1.0.0-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20260630101357</lastUpdated>
+  </versioning>
+</metadata>

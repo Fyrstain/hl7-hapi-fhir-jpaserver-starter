@@ -51,6 +51,7 @@ import ca.uhn.fhir.jpa.starter.annotations.OnImplementationGuidesPresent;
 import ca.uhn.fhir.jpa.starter.common.validation.IRepositoryValidationInterceptorFactory;
 import ca.uhn.fhir.jpa.starter.elastic.ElasticsearchBootSvcImpl;
 import ca.uhn.fhir.jpa.starter.errorreport.ErrorReportingExceptionInterceptor;
+import ca.uhn.fhir.jpa.starter.generation.provider.GenerateProvider;
 import ca.uhn.fhir.jpa.starter.ig.ExtendedPackageInstallationSpec;
 import ca.uhn.fhir.jpa.starter.ig.IImplementationGuideOperationProvider;
 import ca.uhn.fhir.jpa.subscription.util.SubscriptionDebugLogInterceptor;
@@ -306,37 +307,38 @@ public class StarterJpaConfig {
 
 	@Bean
 	public RestfulServer restfulServer(
-			IFhirSystemDao<?, ?> fhirSystemDao,
-			AppProperties appProperties,
-			DaoRegistry daoRegistry,
-			Optional<MdmProviderLoader> mdmProviderProvider,
-			IJpaSystemProvider jpaSystemProvider,
-			ResourceProviderFactory resourceProviderFactory,
-			JpaStorageSettings jpaStorageSettings,
-			SubscriptionSettings subscriptionSettings,
-			ISearchParamRegistry searchParamRegistry,
-			IValidationSupport theValidationSupport,
-			DatabaseBackedPagingProvider databaseBackedPagingProvider,
-			LoggingInterceptor loggingInterceptor,
-			Optional<TerminologyUploaderProvider> terminologyUploaderProvider,
-			Optional<SubscriptionTriggeringProvider> subscriptionTriggeringProvider,
-			Optional<CorsInterceptor> corsInterceptor,
-			IInterceptorBroadcaster interceptorBroadcaster,
-			Optional<BinaryAccessProvider> binaryAccessProvider,
-			IValidatorModule validatorModule,
-			Optional<GraphQLProvider> graphQLProvider,
-			BulkDataExportProvider bulkDataExportProvider,
-			BulkDataImportProvider bulkDataImportProvider,
-			ValueSetOperationProvider theValueSetOperationProvider,
-			ReindexProvider reindexProvider,
-			Optional<RepositoryValidatingInterceptor> repositoryValidatingInterceptor,
-			IPackageInstallerSvc packageInstallerSvc,
-			ThreadSafeResourceDeleterSvc theThreadSafeResourceDeleterSvc,
-			ApplicationContext appContext,
-			Optional<IpsOperationProvider> theIpsOperationProvider,
-			Optional<IImplementationGuideOperationProvider> implementationGuideOperationProvider,
-			Optional<ErrorReportingExceptionInterceptor> errorReportingExceptionInterceptor,
-			DiffProvider diffProvider) {
+		IFhirSystemDao<?, ?> fhirSystemDao,
+		AppProperties appProperties,
+		DaoRegistry daoRegistry,
+		Optional<MdmProviderLoader> mdmProviderProvider,
+		IJpaSystemProvider jpaSystemProvider,
+		ResourceProviderFactory resourceProviderFactory,
+		JpaStorageSettings jpaStorageSettings,
+		SubscriptionSettings subscriptionSettings,
+		ISearchParamRegistry searchParamRegistry,
+		IValidationSupport theValidationSupport,
+		DatabaseBackedPagingProvider databaseBackedPagingProvider,
+		LoggingInterceptor loggingInterceptor,
+		Optional<TerminologyUploaderProvider> terminologyUploaderProvider,
+		Optional<SubscriptionTriggeringProvider> subscriptionTriggeringProvider,
+		Optional<CorsInterceptor> corsInterceptor,
+		IInterceptorBroadcaster interceptorBroadcaster,
+		Optional<BinaryAccessProvider> binaryAccessProvider,
+		IValidatorModule validatorModule,
+		Optional<GraphQLProvider> graphQLProvider,
+		BulkDataExportProvider bulkDataExportProvider,
+		BulkDataImportProvider bulkDataImportProvider,
+		ValueSetOperationProvider theValueSetOperationProvider,
+		ReindexProvider reindexProvider,
+		Optional<RepositoryValidatingInterceptor> repositoryValidatingInterceptor,
+		IPackageInstallerSvc packageInstallerSvc,
+		ThreadSafeResourceDeleterSvc theThreadSafeResourceDeleterSvc,
+		ApplicationContext appContext,
+		Optional<IpsOperationProvider> theIpsOperationProvider,
+		Optional<IImplementationGuideOperationProvider> implementationGuideOperationProvider,
+		Optional<ErrorReportingExceptionInterceptor> errorReportingExceptionInterceptor,
+		DiffProvider diffProvider,
+		Optional<GenerateProvider> generateProvider) {
 		RestfulServer fhirServer = new RestfulServer(fhirSystemDao.getContext());
 
 		List<String> supportedResourceTypes = appProperties.getSupported_resource_types();
@@ -518,6 +520,8 @@ public class StarterJpaConfig {
 		if (appProperties.getUserRequestRetryVersionConflictsInterceptorEnabled()) {
 			fhirServer.registerInterceptor(new UserRequestRetryVersionConflictsInterceptor());
 		}
+
+		generateProvider.ifPresent(fhirServer::registerProvider);
 
 		// register custom providers
 		registerCustomProviders(fhirServer, appContext, appProperties.getCustomProviderClasses());

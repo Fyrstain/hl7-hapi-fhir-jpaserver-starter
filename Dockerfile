@@ -34,8 +34,8 @@ COPY --chown=65532:65532 server.xml /usr/local/tomcat/conf/server.xml
 COPY --from=build-hapi --chown=65532:65532 /tmp/hapi-fhir-jpaserver-starter/target/ROOT.war /usr/local/tomcat/webapps/ROOT.war
 COPY --from=build-hapi --chown=65532:65532 /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
 
-########### distroless brings focus on security and runs on plain spring boot - this is the default image
-FROM gcr.io/distroless/java21-debian13:nonroot AS default
+########### distroless brings focus on security and runs on plain spring boot
+FROM gcr.io/distroless/java21-debian13:nonroot AS distroless
 # 65532 is the nonroot user's uid
 # used here instead of the name to allow Kubernetes to easily detect that the container
 # is running as a non-root (uid != 0) user.
@@ -44,5 +44,23 @@ WORKDIR /app
 
 COPY --chown=nonroot:nonroot --from=build-distroless /app /app
 COPY --chown=nonroot:nonroot --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
+
+ENTRYPOINT ["java", "--class-path", "/app/main.war", "-Dloader.path=main.war!/WEB-INF/classes/,main.war!/WEB-INF/,/app/extra-classes", "org.springframework.boot.loader.PropertiesLauncher"]
+
+########### default runtime keeps Maven available so Dolus-based $generate can execute inside the container
+FROM docker.io/library/maven:3.9.12-eclipse-temurin-21 AS default
+WORKDIR /app
+
+RUN mkdir -p /opt/generation/realms /opt/generation/work /root/.m2
+
+ENV HAPI_FHIR_GENERATION_ENABLED=true \
+    HAPI_FHIR_GENERATION_JAR_PATH=/opt/generation/dolus.jar \
+    HAPI_FHIR_GENERATION_INPUT_BASE_DIR=/opt/generation/realms \
+    HAPI_FHIR_GENERATION_WORK_DIR=/opt/generation/work \
+    HAPI_FHIR_GENERATION_MAVEN_PATH=mvn
+
+COPY docker/m2 /root/.m2
+COPY --from=build-distroless /app /app
+COPY --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
 
 ENTRYPOINT ["java", "--class-path", "/app/main.war", "-Dloader.path=main.war!/WEB-INF/classes/,main.war!/WEB-INF/,/app/extra-classes", "org.springframework.boot.loader.PropertiesLauncher"]
