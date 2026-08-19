@@ -39,6 +39,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static ca.uhn.fhir.context.FhirVersionEnum.R4;
 import static ca.uhn.fhir.jpa.starter.mapping.model.Variable.VariableMode.*;
@@ -88,6 +90,8 @@ public class Mapper {
 	public static final String JSON_MIME_TYPE = "application/json";
 	public static final String HL7v2_MIME_TYPE = "text/x-hl7-ft";
 	public static final String XML_MIME_TYPE = "application/xml";
+	private static final Pattern VERSIONED_HL7_STRUCTURE_DEFINITION_URL =
+			Pattern.compile("^https?://hl7\\.org/fhir/(\\d+\\.\\d+)/StructureDefinition/[^/]+$");
 	private static final Logger logger = LoggerFactory.getLogger(Mapper.class);
 	private final IWorkerContext worker;
 	private final FHIRPathEngine fhirPathEngine;
@@ -131,7 +135,9 @@ public class Mapper {
 
 		boolean isCDAToFhir = isCDAToFhir(firstGroup);
 		boolean isFhirToCda = isFhirToCda(firstGroup);
-		if (isCDAToFhir || isFhirToCda || isFhirToFhir(firstGroup)) {
+		boolean usesCrossVersionHl7Structures = isCrossVersionHl7StructureMap(structureMap, firstGroup);
+		boolean usesNonR4Hl7Structures = usesNonR4Hl7StructureMap(structureMap, firstGroup);
+		if (isCDAToFhir || isFhirToCda || usesCrossVersionHl7Structures || usesNonR4Hl7Structures) {
 			// TODO update how input are parsed
 			// TODO See for multiple inputs ?
 			String inputContent = firstGroup.getInput().stream()
@@ -240,43 +246,58 @@ public class Mapper {
 		}
 	}
 
-	private boolean isFhirToFhir(StructureMap.StructureMapGroupComponent group) {
-		// For now, only return true if transform has exactly one input and one output
-		List<StructureMap.StructureMapGroupInputComponent> inputs = group.getInput().stream()
-				.filter(i -> StructureMap.StructureMapInputMode.SOURCE.equals(i.getMode()))
-				.toList();
-		List<StructureMap.StructureMapGroupInputComponent> outputs = group.getInput().stream()
-				.filter(i -> StructureMap.StructureMapInputMode.TARGET.equals(i.getMode()))
-				.toList();
 
-		if (inputs.size() != 1 || outputs.size() != 1) {
-			return false;
+	/**
+	 * Detects R4/R5 maps from the official versioned HL7 StructureDefinition URLs.
+	 * Maps using custom or unversioned canonical URLs intentionally remain on the native mapper.
+	 */
+	static boolean isCrossVersionHl7StructureMap(
+			StructureMap structureMap, StructureMap.StructureMapGroupComponent group) {
+		Set<String> sourceVersions = findVersionedHl7StructureVersions(
+				structureMap, group, StructureMap.StructureMapInputMode.SOURCE);
+		Set<String> targetVersions = findVersionedHl7StructureVersions(
+				structureMap, group, StructureMap.StructureMapInputMode.TARGET);
+
+		return sourceVersions.stream().anyMatch(sourceVersion -> targetVersions.stream()
+				.anyMatch(targetVersion -> !sourceVersion.equals(targetVersion)));
+	}
+
+	/**
+	 * The native mapper is R4-only. A map that explicitly declares an official R5 model
+	 * must therefore continue through Matchbox, even when both sides are R5.
+	 */
+	static boolean usesNonR4Hl7StructureMap(
+			StructureMap structureMap, StructureMap.StructureMapGroupComponent group) {
+		return findVersionedHl7StructureVersions(structureMap, group, null).stream()
+				.anyMatch(version -> !"4.0".equals(version));
+	}
+
+	private static Set<String> findVersionedHl7StructureVersions(
+			StructureMap structureMap,
+			StructureMap.StructureMapGroupComponent group,
+			StructureMap.StructureMapInputMode inputMode) {
+		return group.getInput().stream()
+				.filter(input -> inputMode == null || inputMode.equals(input.getMode()))
+				.flatMap(input -> structureMap.getStructure().stream()
+						.filter(structure -> structure.getMode().toCode().equals(input.getMode().toCode()))
+						.filter(structure -> matchesInputStructure(input, structure))
+						.map(StructureMap.StructureMapStructureComponent::getUrl))
+				.map(VERSIONED_HL7_STRUCTURE_DEFINITION_URL::matcher)
+				.filter(Matcher::matches)
+				.map(matcher -> matcher.group(1))
+				.collect(Collectors.toSet());
+	}
+
+	private static boolean matchesInputStructure(
+			StructureMap.StructureMapGroupInputComponent input,
+			StructureMap.StructureMapStructureComponent structure) {
+		if (input.getType().equals(structure.getAlias())) {
+			return true;
 		}
 
-		String inputType = inputs.stream()
-				.map(StructureMap.StructureMapGroupInputComponent::getType)
-				.findFirst()
-				.orElse("");
-
-		String outputType = outputs.stream()
-				.map(StructureMap.StructureMapGroupInputComponent::getType)
-				.findFirst()
-				.orElse("");
-
-		switch (inputType) {
-			case "CSV":
-			case "JSON":
-			case "HL7v2":
-			case "HPRIM":
-			case "XML":
-				return false;
-			default:
-				break;
-		}
-		return switch (outputType) {
-			case "CSV", "JSON", "HL7v2", "HPRIM", "XML" -> false;
-			default -> true;
-		};
+		String structureUrl = structure.getUrl();
+		int typeStart = structureUrl == null ? -1 : structureUrl.lastIndexOf('/') + 1;
+		return typeStart > 0 && input.getType().equals(structureUrl.substring(typeStart));
 	}
 
 	private boolean isCDAToFhir(StructureMap.StructureMapGroupComponent group) {
